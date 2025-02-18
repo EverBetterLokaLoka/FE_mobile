@@ -1,15 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://67ab0ce065ab088ea7e86b6f.mockapi.io/api';
+  final String baseUrl = 'https://f0ef-14-174-211-14.ngrok-free.app/api';
 
-  Future<dynamic> request({
+  final String locationUrl = 'https://provinces.open-api.vn/api/p';
+
+  Future<http.Response> request({
     required String path,
     required String method,
+    required String typeUrl,
     Map<String, dynamic>? data,
   }) async {
-    final Uri url = Uri.parse('$baseUrl$path');
+    Uri url;
+    if (typeUrl == UrlConstant().baseUrl) {
+      url = Uri.parse('$baseUrl$path');
+    } else if (typeUrl == UrlConstant().locationUrl) {
+      print(locationUrl);
+      url = Uri.parse('$locationUrl$path');
+    } else {
+      throw Exception('Invalid URL type: $typeUrl');
+    }
+
     http.Response response;
 
     switch (method.toUpperCase()) {
@@ -30,7 +43,7 @@ class ApiService {
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
+      return response;
     } else {
       throw Exception('Failed to load data: ${response.statusCode}');
     }

@@ -10,6 +10,7 @@ class Login extends StatelessElement{
     final response = await _apiService.request(
       path: '/login',
       method: 'POST',
+      typeUrl: 'baseUrl',
       data: {'email': email, 'password': password},
     );
     print('Login successful: $response');
