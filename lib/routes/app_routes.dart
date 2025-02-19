@@ -10,8 +10,8 @@ class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (_) => CreateItinerary());
-        // return MaterialPageRoute(builder: (_) => IntroScreen());
+        // return MaterialPageRoute(builder: (_) => CreateItinerary());
+        return MaterialPageRoute(builder: (_) => IntroScreen());
       case '/login':
         // return MaterialPageRoute(builder: (_) => LoginScreen());
       case '/profile':

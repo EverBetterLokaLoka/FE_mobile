@@ -60,6 +60,7 @@ flutter:
     - assets/images/logo.png
     - assets/images/star_ai.png
     - assets/images/SC_000_Background.png
+    - assets/images/gg.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
