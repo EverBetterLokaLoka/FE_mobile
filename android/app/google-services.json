@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "123422089993",
+    "project_id": "lokaloka-3eeda",
+    "storage_bucket": "lokaloka-3eeda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123422089993:android:8bb16afa83c858eb0869d8",
+        "android_client_info": {
+          "package_name": "com.example.lokaloka"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123422089993-gif4av73699eb9mpeie9gk3c4r3sfb6q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lokaloka",
+            "certificate_hash": "628fbf5e2f90b287ffd748fca54a20c9fb19a881"
+          }
+        },
+        {
+          "client_id": "123422089993-ppnlhi0d491nnolf8mc5kucc8ptsjd9a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTOdj0nyVctktwBgQU3RQDiq-FpfXS2bY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123422089993-5shvdh1tj0ra4ngn5sel9k72rm9rr2sf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "123422089993-9c5alc3t1u83eqm2blhvad79v5kusib4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lokaloka"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123422089993:android:e6a08aec451a695f0869d8",
+        "android_client_info": {
+          "package_name": "com.lokaloka"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123422089993-ppnlhi0d491nnolf8mc5kucc8ptsjd9a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTOdj0nyVctktwBgQU3RQDiq-FpfXS2bY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123422089993-5shvdh1tj0ra4ngn5sel9k72rm9rr2sf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "123422089993-9c5alc3t1u83eqm2blhvad79v5kusib4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lokaloka"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
