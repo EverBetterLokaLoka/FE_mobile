@@ -12,6 +12,8 @@ class AppRoutes {
       case '/':
         // return MaterialPageRoute(builder: (_) => CreateItinerary());
         return MaterialPageRoute(builder: (_) => IntroScreen());
+      case '/home':
+      return MaterialPageRoute(builder: (_) => HomeScreen());
       case '/login':
         // return MaterialPageRoute(builder: (_) => LoginScreen());
       case '/profile':

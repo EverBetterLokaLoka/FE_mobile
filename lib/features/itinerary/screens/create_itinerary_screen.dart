@@ -51,13 +51,12 @@ class _CreateItineraryState extends State<CreateItinerary> {
   }
 
   Future<void> _updateEndDate() async {
-
     if (_selectedStartDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please select start date first.")),
       );
       return;
-    }else if(_dayController.text.isEmpty){
+    } else if (_dayController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please type how many days.")),
       );
@@ -68,7 +67,8 @@ class _CreateItineraryState extends State<CreateItinerary> {
     _selectedEndDate = _selectedStartDate!.add(Duration(days: days - 1));
 
     setState(() {
-      _endDateController.text = DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
+      _endDateController.text =
+          DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
     });
   }
 
@@ -76,7 +76,8 @@ class _CreateItineraryState extends State<CreateItinerary> {
     final translator = GoogleTranslator();
 
     await Future.wait(vietnameseData.map((item) async {
-      var translatedName = await translator.translate(item['name'], from: 'vi', to: 'en');
+      var translatedName =
+          await translator.translate(item['name'], from: 'vi', to: 'en');
       item['name'] = translatedName.text;
     }));
   }
@@ -84,10 +85,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
   Future<void> _fetchLocations() async {
     try {
       final response = await _apiService.request(
-          path: '',
-          method: 'GET',
-          typeUrl: 'locationUrl',
-      );
+          path: '', method: 'GET', typeUrl: 'locationUrl', token: '');
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -95,10 +93,9 @@ class _CreateItineraryState extends State<CreateItinerary> {
         await translateData(vietnameseData);
 
         setState(() {
-          _locations = data.map((item) => {
-            'id': item['id'],
-            'name': item['name']
-          }).toList();
+          _locations = data
+              .map((item) => {'id': item['id'], 'name': item['name']})
+              .toList();
           setState(() {
             _isLoading = false;
           });
@@ -118,12 +115,12 @@ class _CreateItineraryState extends State<CreateItinerary> {
 
   List<Map<String, String>> _filterLocations(String query) {
     return _locations
-        .where((location) =>
-        (location['name']?.toString().toLowerCase() ?? '').contains(query.toLowerCase()))
+        .where((location) => (location['name']?.toString().toLowerCase() ?? '')
+            .contains(query.toLowerCase()))
         .map((location) => {
-      'id': location['id'].toString(),
-      'name': location['name'].toString(),
-    })
+              'id': location['id'].toString(),
+              'name': location['name'].toString(),
+            })
         .toList();
   }
 
@@ -135,7 +132,6 @@ class _CreateItineraryState extends State<CreateItinerary> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: ItineraryAppBar(
         titleText: 'Create Itinerary ',
@@ -147,64 +143,63 @@ class _CreateItineraryState extends State<CreateItinerary> {
           child: Form(
             key: _formKey,
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Plan a new trip',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.orangeColor),
-                  ),
-                  SizedBox(height: 5),
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox.fromSize(
-                      child: Text(
-                        'Build an itinerary and map out your \n upcoming travel plans',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                      ),
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Plan a new trip',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.orangeColor),
+                ),
+                SizedBox(height: 5),
+                Align(
+                  alignment: Alignment.center,
+                  child: SizedBox.fromSize(
+                    child: Text(
+                      'Build an itinerary and map out your \n upcoming travel plans',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     ),
                   ),
-
-                  SizedBox.fromSize(
-                  size: Size(0,20),
-                  ),
-
-                  TypeAheadField<Map<String, String>>(
-                    suggestionsCallback: (search) async {
-                      return _filterLocations(search);
-                    },
-                    builder: (context, controller, focusNode) {
-                      _textEditingController = controller;
-                      return TextFormField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        decoration: InputDecoration(
-                          labelText: 'Where to?',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
-                        validator: (value) {
-                          if (_selectedLocation == null) {
-                            return 'Please select a destination';
-                          }
-                          return null;
-                        },
-                      );
-                    },
-                    itemBuilder: (context, location) {
-                      return ListTile(
-                        title: Text(location['name'] ?? 'Unknown'),
-                      );
-                    },
-                    onSelected: (location) {
-                      _textEditingController.text = location['name']!;
-                      _selectedLocation = location['name']!;
-                    },
-                  ),
-
-                  SizedBox(height: 20),
-
-                  TextFormField(
+                ),
+                SizedBox.fromSize(
+                  size: Size(0, 20),
+                ),
+                TypeAheadField<Map<String, String>>(
+                  suggestionsCallback: (search) async {
+                    return _filterLocations(search);
+                  },
+                  builder: (context, controller, focusNode) {
+                    _textEditingController = controller;
+                    return TextFormField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Where to?',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                      validator: (value) {
+                        if (_selectedLocation == null) {
+                          return 'Please select a destination';
+                        }
+                        return null;
+                      },
+                    );
+                  },
+                  itemBuilder: (context, location) {
+                    return ListTile(
+                      title: Text(location['name'] ?? 'Unknown'),
+                    );
+                  },
+                  onSelected: (location) {
+                    _textEditingController.text = location['name']!;
+                    _selectedLocation = location['name']!;
+                  },
+                ),
+                SizedBox(height: 20),
+                TextFormField(
                   controller: _dayController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -237,11 +232,9 @@ class _CreateItineraryState extends State<CreateItinerary> {
                       _updateEndDate();
                     }
                   },
-                  ),
-
-                  SizedBox(height: 20),
-
-                  Row(
+                ),
+                SizedBox(height: 20),
+                Row(
                   children: [
                     Expanded(
                       child: TextFormField(
@@ -256,7 +249,6 @@ class _CreateItineraryState extends State<CreateItinerary> {
                       ),
                     ),
                     SizedBox(width: 10),
-        
                     Expanded(
                       child: TextFormField(
                         controller: _endDateController,
@@ -270,89 +262,86 @@ class _CreateItineraryState extends State<CreateItinerary> {
                       ),
                     ),
                   ],
-                  ),
-
-                  Spacer(),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(
-                          width: 170,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // if (_formKey.currentState!.validate()) {
-                              //   ScaffoldMessenger.of(context).showSnackBar(
-                              //     SnackBar(content: Text('Đang tạo hành trình...')),
-                              //   );
-                              // }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
+                ),
+                Spacer(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 15.0, vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 170,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // if (_formKey.currentState!.validate()) {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     SnackBar(content: Text('Đang tạo hành trình...')),
+                            //   );
+                            // }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                          ),
+                          child: Text(
+                            'Create Trip Manually',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
-                            child: Text(
-                              'Create Trip Manually',
-                              style: TextStyle(
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      SizedBox(
+                        width: 170,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CreateByAi(
+                                    location: _selectedLocation.toString(),
+                                    totalDay: _dayController.text,
+                                    startDate: _startDateController.text,
+                                    endDate: _endDateController.text,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ImageIcon(
+                                AssetImage('assets/images/star_ai.png'),
+                                size: 22,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
                               ),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(width: 10),
-
-                        SizedBox(
-                          width: 170,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CreateByAi(
-                                      location: _selectedLocation.toString(),
-                                      totalDay: _dayController.text,
-                                      startDate: _startDateController.text,
-                                      endDate: _endDateController.text,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ImageIcon(
-                                  AssetImage('assets/images/star_ai.png'),
-                                  size: 22,
+                              SizedBox(width: 5),
+                              Text(
+                                'Create By AI',
+                                style: TextStyle(
                                   color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Create By AI',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
             ),
           ),
         ),

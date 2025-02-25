@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import '../../../core/styles/colors.dart';
 import '../../../core/utils/apis.dart';
+import '../../home/screens/term_of_service.dart';
+import '../services/auth_services.dart';
 import 'login_screen.dart';
 import '../../../core/constants/url_constant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -27,6 +33,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _isLoading = false;
@@ -45,20 +54,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final response = await apiService.request(
-        path: '/auth/registerWithGoogle',
+        path: '/auth/register',
         method: 'POST',
         typeUrl: UrlConstant().baseUrl,
         data: data,
+        token: ''
       );
 
       if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        String token = responseData["token"];
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("auth_token", token);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign-up successful!')),
         );
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Login( response.body),
+            builder: (context) => TermOfService(),
           ),
         );
       } else {
@@ -78,26 +93,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/SC_000_Background.png"),
-            fit: BoxFit.cover,
+      body: SafeArea(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/images/SC_000_Background.png"),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                _buildSignUpForm(),
-                const SizedBox(height: 20),
-              ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildSignUpForm(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -153,7 +170,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 20),
           _buildSocialLogin(),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () async {
+              final user = await AuthService().signInWithGoogle();
+              if (user != null) {
+                print("Đăng ký thành công: ${user.displayName}");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Chào mừng, ${user.displayName}!")),
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TermOfService(),
+                  ),
+                );
+              } else {
+                print("Đăng ký thất bại.");
+              }
+            },
             icon: Image.asset("assets/images/gg.png", height: 24),
             label: const Text(
               "Sign up with Google",
@@ -229,12 +262,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
         Text("$label *", style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextFormField(
-          controller: controller,
-          obscureText: true,
+          controller: _passwordController,
+          obscureText: _obscurePassword,
           decoration: InputDecoration(
             hintText: "Enter your password",
+            prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            suffixIcon: const Icon(Icons.visibility_off),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -262,8 +306,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
           obscureText: true,
           decoration: InputDecoration(
             hintText: "Confirm your password",
+            prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                });
+              },
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            suffixIcon: const Icon(Icons.visibility_off),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -289,7 +346,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const Login(''),
+                builder: (context) => const Login(),
               ),
             );
           },

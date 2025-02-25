@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://e044-14-176-232-65.ngrok-free.app/api';
+  final String baseUrl = 'https://f65a-113-176-99-140.ngrok-free.app/api';
 
   final String locationUrl = 'https://provinces.open-api.vn/api/p';
 
@@ -11,6 +11,7 @@ class ApiService {
     required String path,
     required String method,
     required String typeUrl,
+    required String? token,
     Map<String, dynamic>? data,
   }) async {
     Uri url;
@@ -27,16 +28,16 @@ class ApiService {
 
     switch (method.toUpperCase()) {
       case 'GET':
-        response = await http.get(url, headers: _defaultHeaders());
+        response = await http.get(url, headers: _defaultHeaders(token!));
         break;
       case 'POST':
-        response = await http.post(url, headers: _defaultHeaders(), body: jsonEncode(data));
+        response = await http.post(url, headers: _defaultHeaders(token!), body: jsonEncode(data));
         break;
       case 'PUT':
-        response = await http.put(url, headers: _defaultHeaders(), body: jsonEncode(data));
+        response = await http.put(url, headers: _defaultHeaders(token!), body: jsonEncode(data));
         break;
       case 'PATCH':
-        response = await http.patch(url, headers: _defaultHeaders(), body: jsonEncode(data));
+        response = await http.patch(url, headers: _defaultHeaders(token!), body: jsonEncode(data));
         break;
       default:
         throw Exception('Unsupported HTTP method: $method');
@@ -49,11 +50,11 @@ class ApiService {
     }
   }
 
-  Map<String, String> _defaultHeaders() {
+  Map<String, String> _defaultHeaders(String? token) {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      // Authorization token
+      if (token != null) "Authorization": "Bearer $token",
     };
   }
 }
