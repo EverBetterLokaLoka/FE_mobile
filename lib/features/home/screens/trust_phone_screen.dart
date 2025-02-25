@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lokaloka/features/home/screens/home_screen.dart';
-
 import '../../../core/styles/colors.dart';
 
 class TrustPhoneScreen extends StatefulWidget {
@@ -17,7 +15,7 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
 
   String? validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return "⚠ Invalid phone number.";
+      return null;
     }
     if (!RegExp(r'^\d{10,11}$').hasMatch(value)) {
       return "⚠ Invalid phone number.";
@@ -45,7 +43,7 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
                     children: [
                       const SizedBox(height: 15),
                       Align(
-                        alignment: Alignment.topRight,    
+                        alignment: Alignment.topRight,
                         child: DropdownButton<String>(
                           value: "English",
                           icon: const Icon(Icons.arrow_drop_down,
@@ -126,13 +124,10 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 10),
-
                                     buildPhoneInput(phoneController1),
                                     const SizedBox(height: 10),
-
                                     buildPhoneInput(phoneController2),
                                     const SizedBox(height: 10),
-
                                     buildPhoneInput(phoneController3),
                                   ],
                                 ),
@@ -142,19 +137,9 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
 
                               // Finish Button
                               ElevatedButton(
-                                onPressed: () {
+                                onPressed: () => {
                                   if (_formKey.currentState!.validate()) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              "All phone numbers are valid!")),
-                                    );
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => HomeScreen(),
-                                      ),
-                                    );
+                                    Navigator.pushNamed(context, '/home')
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(

@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import '../core/constants/routes_constant.dart';
 import '../features/auth/screens/intro_screen.dart';
+import '../features/auth/screens/login_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/itinerary/screens/create_itinerary_screen.dart';
 
-final router = RoutesConstant();  // Tạo instance của Router
+final router = RoutesConstant(); // Tạo instance của Router
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        // return MaterialPageRoute(builder: (_) => CreateItinerary());
         return MaterialPageRoute(builder: (_) => IntroScreen());
       case '/home':
-      return MaterialPageRoute(builder: (_) => HomeScreen());
+        return MaterialPageRoute(builder: (_) => HomeScreen());
       case '/login':
-        // return MaterialPageRoute(builder: (_) => LoginScreen());
+      return MaterialPageRoute(builder: (_) => Login());
+      case '/create-itinerary':
+        return MaterialPageRoute(builder: (_) => CreateItinerary());
       case '/profile':
-        // return MaterialPageRoute(builder: (_) => ProfileScreen());
+      // return MaterialPageRoute(builder: (_) => ProfileScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

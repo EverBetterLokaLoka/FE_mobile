@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://f65a-113-176-99-140.ngrok-free.app/api';
+  final String baseUrl = 'https://c0a6-42-113-215-116.ngrok-free.app/api';
 
   final String locationUrl = 'https://provinces.open-api.vn/api/p';
 
