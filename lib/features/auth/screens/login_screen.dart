@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
-import '../../home/screens/home_screen.dart';
 import '../services/auth_services.dart';
 import 'forgot_password_screen.dart';
 
@@ -17,6 +16,7 @@ class _SignInPageState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   final AuthService _authService = AuthService();
+  final _formKey = GlobalKey<FormState>();
 
   Future<void> login(BuildContext context) async {
     final email = _emailController.text.trim();
@@ -96,96 +96,121 @@ class _SignInPageState extends State<Login> {
                       )
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Center(
-                        child: Text(
-                          "SignIn",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.orangeColor,
-                          ),
-                        ),
-                      ),
-                      const Center(
-                        child: Text(
-                          "Explore the world! Let’s explore together!",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text("Email*",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 5),
-                      TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          hintText: "Enter your email",
-                          prefixIcon: const Icon(Icons.email,
-                              color: AppColors.orangeColor),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      const Text("Password*",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 5),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: "Enter your password",
-                          prefixIcon: const Icon(Icons.lock,
-                              color: AppColors.orangeColor),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.grey,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Center(
+                          child: Text(
+                            "Sign In",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.orangeColor,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ForgotPassword(),
-                              ),
-                            );
+                        const Center(
+                          child: Text(
+                            "Explore the world! Let’s explore together!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Email Field
+                        const Text("Email*", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 5),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            hintText: "Enter your email",
+                            prefixIcon: const Icon(Icons.email, color: AppColors.orangeColor),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Please enter your email";
+                            }
+                            return null;
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
+                        ),
+                        const SizedBox(height: 15),
+
+                        const Text("Password*", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 5),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            hintText: "Enter your password",
+                            prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: const Text(
-                            "Forgot password?",
-                            style: TextStyle(fontSize: 16, color: Colors.red),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Please enter your password";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Forgot Password Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ForgotPassword()),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text(
+                              "Forgot password?",
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pushNamed(context, '/home')
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.orangeColor,
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text("Sign In", style: TextStyle(fontSize: 18, color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 SizedBox(height: 30),

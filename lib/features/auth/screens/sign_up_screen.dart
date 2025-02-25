@@ -33,11 +33,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordConfirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   bool _isLoading = false;
 
   Future<void> _signUp() async {
@@ -50,6 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       'fullName': _fullNameController.text.trim(),
       'email': _emailController.text.trim(),
       'password': _passwordController.text,
+      'passwordConfirm': _passwordConfirmController.text,
     };
 
     try {
@@ -283,8 +282,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           validator: (value) {
             if (value == null || value.isEmpty) {
               return "$label is required";
-            } else if (value.length < 6) {
-              return "Password must be at least 6 characters long";
+            } else if (value.length < 8 && value.length > 16) {
+              return "Password must be at least 8 characters long and 16 characters.";
             }
             return null;
           },
@@ -302,7 +301,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextFormField(
-          controller: _confirmPasswordController,
+          controller: _passwordConfirmController,
           obscureText: true,
           decoration: InputDecoration(
             hintText: "Confirm your password",
