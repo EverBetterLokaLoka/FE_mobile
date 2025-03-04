@@ -1,8 +1,36 @@
+import 'dart:convert';
+
 import '../../../core/utils/apis.dart';
 import '../models/Itinerary.dart';
 
 class ItineraryApi {
   final ApiService _apiService = ApiService();
+
+  Future<List<Map<String, dynamic>>> fetchItineraries() async {
+    try {
+      final response = await _apiService.request(
+        path: '/itineraries',
+        method: 'GET',
+        typeUrl: 'baseUrl',
+        currentPath: '',
+      );
+
+      if (response.statusCode == 200) {
+        final dynamic responseBody = jsonDecode(response.body);
+
+        if (responseBody is Map<String, dynamic> &&
+            responseBody.containsKey('data')) {
+          final dynamic data = responseBody['data'];
+          if (data is List) {
+            return List<Map<String, dynamic>>.from(data);
+          }
+        }
+      }
+    } catch (e) {
+      print("Error fetching itineraries: $e");
+    }
+    return [];
+  }
 
   Future<bool?> saveItinerary(Itinerary itinerary) async {
     try {
@@ -49,10 +77,33 @@ class ItineraryApi {
         return true;
       } else {
         print("Failed to save itinerary: ${response.body}");
-        return null;
+        return false;
       }
     } catch (e) {
       print("Error saving itinerary: $e");
+    }
+    return false;
+  }
+
+  Future<bool?> deleteItinerary(int itineraryId) async {
+    try {
+      final response = await _apiService.request(
+        path: '/itineraries/$itineraryId',
+        method: 'DELETE',
+        typeUrl: 'baseUrl',
+        currentPath: '',
+      );
+
+      if (response.statusCode == 200) {
+        print("Itinerary deleted successfully!");
+        return true;
+      } else {
+        print("Failed to delete itinerary: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Error deleting itinerary: $e");
+      return null;
     }
   }
 }
