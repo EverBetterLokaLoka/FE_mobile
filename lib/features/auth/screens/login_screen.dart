@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
-import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
 import '../services/auth_services.dart';
 import 'forgot_password_screen.dart';
 
@@ -8,10 +7,17 @@ class Login extends StatefulWidget {
   const Login({super.key});
 
   @override
-  State<Login> createState() => _SignInPageState();
+  State<Login> createState() => _LoginState();
 }
 
-class _SignInPageState extends State<Login> {
+class _LoginState extends State<Login> {
+  String currentPath = "/login";
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -28,17 +34,16 @@ class _SignInPageState extends State<Login> {
       );
       return;
     }
+    print("login path$currentPath");
+    var data = await _authService.signIn(email, password, currentPath);
 
-    var data = await _authService.signIn(email, password);
-
-    print(data);
     if (data != null) {
-      print("Login successful! ${data.email}");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login successful!")),
-      );
-      Navigator.pushNamed(context, '/home');
+      print("Login successful! ${data.name}");
 
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text("Login successful!")),
+      // );
+      Navigator.pushNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login failed. Please check your information!")),
@@ -126,14 +131,18 @@ class _SignInPageState extends State<Login> {
                         const SizedBox(height: 20),
 
                         // Email Field
-                        const Text("Email*", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const Text("Email*",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: _emailController,
                           decoration: InputDecoration(
                             hintText: "Enter your email",
-                            prefixIcon: const Icon(Icons.email, color: AppColors.orangeColor),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            prefixIcon: const Icon(Icons.email,
+                                color: AppColors.orangeColor),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10)),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -144,17 +153,22 @@ class _SignInPageState extends State<Login> {
                         ),
                         const SizedBox(height: 15),
 
-                        const Text("Password*", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        const Text("Password*",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             hintText: "Enter your password",
-                            prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
+                            prefixIcon: const Icon(Icons.lock,
+                                color: AppColors.orangeColor),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: Colors.grey,
                               ),
                               onPressed: () {
@@ -163,7 +177,8 @@ class _SignInPageState extends State<Login> {
                                 });
                               },
                             ),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10)),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -181,7 +196,8 @@ class _SignInPageState extends State<Login> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => ForgotPassword()),
+                                MaterialPageRoute(
+                                    builder: (context) => ForgotPassword()),
                               );
                             },
                             style: TextButton.styleFrom(
@@ -191,22 +207,6 @@ class _SignInPageState extends State<Login> {
                               "Forgot password?",
                               style: TextStyle(fontSize: 16),
                             ),
-                          ),
-                        ),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.pushNamed(context, '/home')
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.orangeColor,
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text("Sign In", style: TextStyle(fontSize: 18, color: Colors.white)),
                           ),
                         ),
                       ],
@@ -219,7 +219,7 @@ class _SignInPageState extends State<Login> {
                     login(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF8C00),
+                    backgroundColor: AppColors.orangeColor,
                     padding: const EdgeInsets.symmetric(
                         vertical: 14, horizontal: 75),
                     shape: RoundedRectangleBorder(
@@ -279,12 +279,7 @@ class _SignInPageState extends State<Login> {
                     const Text("Don't have an account? "),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignUp(),
-                          ),
-                        );
+                        Navigator.pushNamed(context, '/sign-up');
                       },
                       child: const Text(
                         "Sign up.",

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../core/styles/colors.dart';
 import '../features/notification/screens/notification_screen.dart';
+import '../features/travel/screens/travel_map_screen.dart';
 import 'menu_widget.dart';
 
 class AppBarCustom extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
+    String? currentRoute = ModalRoute.of(context)?.settings.name;
+
     return ClipRRect(
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(20),
@@ -20,43 +22,48 @@ class AppBarCustom extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(Icons.home, '/home', AppColors.orangeColor, context),
-            _buildNavItem(Icons.map, '/map', Colors.white, context),
+            _buildNavItem(Icons.home, '/home', context, "Home", currentRoute),
+            _buildNavItem(Icons.map, '/my-trip', context, "My Trip", currentRoute),
             SizedBox(width: 40),
-            _buildNavItem(Icons.notifications, '', Colors.white, context,
-                screen: NotificationScreen()),
-            _buildNavItem(Icons.menu, '', Colors.white, context, screen: Menu()),
+            _buildNavItem(Icons.notifications, '/notification', context, "Notification", currentRoute, screen: NotificationScreen()),
+            _buildNavItem(Icons.menu, '/menu', context, "Menu", currentRoute, screen: Menu()),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String route, Color color,
-      BuildContext context, {Widget? screen}) {
-    return IconButton(
-      icon: Icon(icon, color: color, size: 30),
-      onPressed: () {
-        if (screen != null) {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => screen,
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOut;
-                var tween = Tween(begin: begin, end: end)
-                    .chain(CurveTween(curve: curve));
-                return SlideTransition(position: animation.drive(tween), child: child);
-              },
-            ),
-          );
-        } else {
-          Navigator.pushNamed(context, route);
-        }
-      },
+  Widget _buildNavItem(IconData icon, String route, BuildContext context, String label, String? currentRoute, {Widget? screen}) {
+    bool isActive = currentRoute == route;
+    Color color = isActive ? AppColors.orangeColor : Colors.white;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(icon, color: color, size: 30),
+          onPressed: () {
+            if (screen != null) {
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => screen,
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    const curve = Curves.easeInOut;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    return SlideTransition(position: animation.drive(tween), child: child);
+                  },
+                ),
+              );
+            } else {
+              Navigator.pushNamed(context, route);
+            }
+          },
+        ),
+        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
+      ],
     );
   }
 }
