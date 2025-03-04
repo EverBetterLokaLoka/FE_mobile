@@ -48,6 +48,10 @@ class ApiService {
         response = await http.patch(url,
             headers: _defaultHeaders(token!), body: jsonEncode(data));
         break;
+      case 'DELETE':
+        response = await http.delete(url,
+            headers: _defaultHeaders(token!), body: jsonEncode(data));
+        break;
       default:
         throw Exception('Unsupported HTTP method: $method');
     }

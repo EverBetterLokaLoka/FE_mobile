@@ -71,7 +71,7 @@ class _CreateByAiState extends State<CreateByAi> {
       final Map<String, dynamic> requestData = {
         'prompt': prompt,
       };
-
+      print(requestData);
       try {
         final response = await _apiService.request(
           path: '/itineraries/generate',

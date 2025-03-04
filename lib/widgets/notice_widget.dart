@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/styles/colors.dart';
+
 Future<bool?> showCustomNotice(
     BuildContext context, String message, String type) async {
   return showDialog<bool>(
@@ -14,25 +16,28 @@ Future<bool?> showCustomNotice(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 50,
-                height: 50,
-              ),
-              const SizedBox(height: 10),
-
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 40,
+                    height: 40,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (type ==
-                      "confirm")
+                  if (type == "confirm")
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop(false);
@@ -50,13 +55,12 @@ Future<bool?> showCustomNotice(
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.cyan,
+                      backgroundColor: AppColors.primaryColor,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
                       shape: RoundedRectangleBorder(

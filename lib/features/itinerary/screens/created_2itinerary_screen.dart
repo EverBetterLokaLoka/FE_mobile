@@ -31,7 +31,6 @@ class ItineraryCreated extends StatelessWidget {
   }
 
   Widget _buildPlanDetails(BuildContext context, ItineraryResponse response) {
-    print("data con${response}");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: response.itinerary.map((itinerary) {

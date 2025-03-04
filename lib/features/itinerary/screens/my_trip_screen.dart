@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
-import 'package:lokaloka/features/itinerary/screens/detail_itinerary_screen.dart';
-import '../../../core/utils/apis.dart';
 import '../../../widgets/app_bar_widget.dart';
-import '../models/Itinerary.dart';
+import '../../../widgets/notice_widget.dart';
+import '../services/itinerary_api.dart';
 
 class MyTrip extends StatefulWidget {
   const MyTrip({Key? key}) : super(key: key);
@@ -15,9 +12,11 @@ class MyTrip extends StatefulWidget {
 }
 
 class _MyTripState extends State<MyTrip> {
-  final ApiService _apiService = ApiService();
-  List<Map<String, dynamic>> locations = [];
+  final ItineraryApi _itineraryService = ItineraryApi();
+  List<Map<String, dynamic>> allItineraries = [];
+  List<Map<String, dynamic>> filteredItineraries = [];
   bool isLoading = true;
+  int selectedTab = 0;
 
   @override
   void initState() {
@@ -26,41 +25,65 @@ class _MyTripState extends State<MyTrip> {
   }
 
   Future<void> _fetchItineraries() async {
-    try {
-      final http.Response response = await _apiService.request(
-        path: '/itineraries',
-        method: 'GET',
-        typeUrl: 'baseUrl',
-        currentPath: '',
-      );
+    setState(() => isLoading = true);
 
-      if (response.statusCode == 200) {
-        final dynamic responseBody = jsonDecode(response.body);
+    final itineraries = await _itineraryService.fetchItineraries();
 
-        if (responseBody is Map<String, dynamic> &&
-            responseBody.containsKey('data')) {
-          final dynamic data = responseBody['data'];
-          if (data is List) {
-            setState(() {
-              locations = List<Map<String, dynamic>>.from(data);
-              isLoading = false;
-            });
-          } else {
-            print("Unexpected 'data' format: $data");
-            setState(() => isLoading = false);
-          }
-        } else {
-          print("Unexpected response format: $responseBody");
-          setState(() => isLoading = false);
-        }
-      } else {
-        print("Failed to fetch data: ${response.statusCode}");
-        setState(() => isLoading = false);
-      }
-    } catch (e) {
-      print('Error fetching itineraries: $e');
-      setState(() => isLoading = false);
+    setState(() {
+      allItineraries = itineraries;
+      _filterItineraries();
+      isLoading = false;
+    });
+  }
+
+  void _deleteItineraryApi(Map<String, dynamic> trip, String userName) async {
+    bool? confirm;
+    while (confirm == null) {
+      confirm = await showCustomNotice(
+          context,
+          "Hi $userName! Please confirm that you want to delete this trip",
+          "confirm");
     }
+
+    if (confirm == true) {
+      final result = await _itineraryService.deleteItinerary(trip['id'] as int);
+
+      if (result == true) {
+        await showCustomNotice(context, "Successfully deleted", "success");
+        setState(() {
+          allItineraries.removeWhere((item) => item['id'] == trip['id']);
+          allItineraries.remove(trip);
+          _filterItineraries();
+        });
+      } else {
+        await showCustomNotice(context, "Fail to delete itinerary", "error");
+      }
+    }else{
+      setState(() {
+        allItineraries.removeWhere((item) => item['id'] == trip['id']);
+        _filterItineraries();
+      });
+    }
+  }
+
+  void _filterItineraries() {
+    setState(() {
+      filteredItineraries = allItineraries
+          .where((trip) => trip['status'] == selectedTab)
+          .toList();
+    });
+  }
+
+  void _shareItinerary(Map<String, dynamic> trip) {
+    final String shareText = 'Check out this itinerary: ${trip['title']}!';
+    print("Sharing: $shareText");
+  }
+
+  void _deleteItinerary(Map<String, dynamic> trip) {
+    setState(() {
+      _deleteItineraryApi(trip, "Phat"); //Sau khi co profile thi doi cho nay !!!
+    });
+    print("Deleted itinerary: ${trip['title']}");
   }
 
   @override
@@ -92,48 +115,59 @@ class _MyTripState extends State<MyTrip> {
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator()) // Hiển thị loading
-          : locations.isEmpty
-              ? const Center(child: Text("No itineraries found"))
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildTabItem('Itineraries', true),
-                          _buildTabItem('Going', false),
-                          _buildTabItem('History', false),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: locations.length,
-                        itemBuilder: (context, index) {
-                          final trip = locations[index];
-                          return _buildTripCard(trip);
-                        },
-                      ),
-                    ),
-                  ],
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Tabs
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildTabItem('Itineraries', 0),
+                      _buildTabItem('Going', 1),
+                      _buildTabItem('History', 2),
+                    ],
+                  ),
                 ),
+                Expanded(
+                  child: filteredItineraries.isEmpty
+                      ? const Center(child: Text("No itineraries found"))
+                      : ListView.builder(
+                          itemCount: filteredItineraries.length,
+                          itemBuilder: (context, index) {
+                            final trip = filteredItineraries[index];
+                            return _buildTripCard(trip);
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 
-  Widget _buildTabItem(String title, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.orangeColor : Colors.grey[300],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? Colors.white : Colors.black,
-          fontWeight: FontWeight.bold,
+  // Tab Buttons
+  Widget _buildTabItem(String title, int tabIndex) {
+    bool isActive = selectedTab == tabIndex;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedTab = tabIndex;
+          _filterItineraries();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.orangeColor : Colors.grey[300],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -208,39 +242,54 @@ class _MyTripState extends State<MyTrip> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        try {
-                          Itinerary itinerary = Itinerary.fromJson(trip);
-                          itinerary = Itinerary(
-                            title: itinerary.title,
-                            description: itinerary.description,
-                            price: itinerary.price?.toString() ?? "0.0", // Chuyển thành String
-                            locations: itinerary.locations,
-                          );
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DetailItineraryScreen(itineraryItems: itinerary),
-                            ),
-                          );
-                        } catch (e) {
-                          print("Error parsing itinerary: $e");
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'share') {
+                          // Share
+                          _shareItinerary(trip);
+                        } else if (value == 'delete') {
+                          _deleteItinerary(trip);
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(50, 30),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share, color: Colors.black),
+                              SizedBox(width: 10),
+                              Text('Share'),
+                            ],
+                          ),
                         ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('Delete',
+                                  style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(35, 23),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Icon(Icons.more_vert, color: Colors.black),
                       ),
-                      child: Text('...', style: TextStyle(color: Colors.black)),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        //Chuyen sang navigation map
+                      },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(35, 23),
                         backgroundColor: AppColors.primaryColor,
