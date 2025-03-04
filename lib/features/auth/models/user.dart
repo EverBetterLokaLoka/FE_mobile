@@ -9,6 +9,7 @@ class UserNormal {
   final String? gender;
   final String? dob;
   final String? avatar;
+  final String? token;
 
   UserNormal({
     required this.id,
@@ -21,6 +22,7 @@ class UserNormal {
     this.gender,
     this.dob,
     this.avatar,
+    this.token
   });
 
   factory UserNormal.fromJson(Map<String, dynamic> json) {

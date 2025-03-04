@@ -11,3 +11,13 @@ String formatVisitTime(String timeStart, String timeFinish) {
 
   return "$formattedStart - $formattedEnd";
 }
+
+String formatStartTime(String timeStart) {
+  DateTime startDateTime = DateTime.parse(timeStart).toLocal();
+
+  DateFormat timeFormat = DateFormat("h:mma");
+
+  String formattedStart = timeFormat.format(startDateTime);
+
+  return formattedStart;
+}
