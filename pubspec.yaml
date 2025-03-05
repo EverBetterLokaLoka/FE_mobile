@@ -47,6 +47,7 @@ dependencies:
   shared_preferences: ^2.5.2
   google_fonts: ^6.2.1
   lucide_icons: ^0.257.0
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,11 @@ flutter:
     - assets/images/SC_000_Home_Background.png
     - assets/images/avt.png
     - assets/images/hoiAn.png
+    - assets/images/profile.png
+    - assets/images/image1.png
+    - assets/images/image2.png
+    - assets/images/image3.png
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

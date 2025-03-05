@@ -9,7 +9,7 @@ class UserNormal {
   final String? gender;
   final String? dob;
   final String? avatar;
-
+  String get displayName => name;
   UserNormal({
     required this.id,
     required this.name,
@@ -25,16 +25,16 @@ class UserNormal {
 
   factory UserNormal.fromJson(Map<String, dynamic> json) {
     return UserNormal(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'Unknown',
-      email: json['email'] ?? '',
-      password: json['password'] ?? '',
-      full_name: json['full_name'] ?? '',
-      address: json['address'] ?? '',
-      phone: json['phone'] ?? '',
-      gender: json['gender'] ?? '',
-      dob: json['dob'] ?? '',
-      avatar: json['avatar'],
+      id: json['id'] ?? 0, // Default to 0 if 'id' is missing
+      name: json['name'] ?? 'Unknown', // Default to 'Unknown' if 'name' is missing
+      email: json['email'] ?? '', // Default to empty string if 'email' is missing
+      password: json['password'], // No default for password, it's optional
+      full_name: json['full_name'] ?? '', // Default to empty string if 'full_name' is missing
+      address: json['address'] ?? '', // Default to empty string if 'address' is missing
+      phone: json['phone'] ?? '', // Default to empty string if 'phone' is missing
+      gender: json['gender'] ?? '', // Default to empty string if 'gender' is missing
+      dob: json['dob'] ?? '', // Default to empty string if 'dob' is missing
+      avatar: json['avatar'], // No default for avatar, it's optional
     );
   }
 
@@ -43,6 +43,11 @@ class UserNormal {
       'id': id,
       'name': name,
       'email': email,
+      'full_name': full_name,
+      'address': address,
+      'phone': phone,
+      'gender': gender,
+      'dob': dob,
       'avatar': avatar,
     };
   }
