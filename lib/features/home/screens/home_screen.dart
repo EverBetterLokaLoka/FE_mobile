@@ -3,8 +3,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../widgets/app_bar_widget.dart';
+import '../../auth/services/auth_services.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AuthService().checkTokenAndProceed(context);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,12 +154,13 @@ class HomeScreen extends StatelessWidget {
             crossAxisCount: 3,
             physics: NeverScrollableScrollPhysics(),
             children: [
-              _buildExperienceItem(LucideIcons.map, "Travel Itinerary"),
-              _buildExperienceItem(LucideIcons.users, "Friends"),
-              _buildExperienceItem(LucideIcons.shieldAlert, "SOS"),
-              _buildExperienceItem(LucideIcons.camera, "Moment"),
-              _buildExperienceItem(LucideIcons.mapPin, "Map"),
-              _buildExperienceItem(LucideIcons.cloudSun, "Weather"),
+              _buildExperienceItem(
+                  LucideIcons.map, "Travel Itinerary", "/travel"),
+              _buildExperienceItem(LucideIcons.users, "Friends", "/add-friend"),
+              _buildExperienceItem(LucideIcons.shieldAlert, "SOS", "/sos"),
+              _buildExperienceItem(LucideIcons.camera, "Moment", "/checkin"),
+              _buildExperienceItem(LucideIcons.mapPin, "Map", "/map"),
+              _buildExperienceItem(LucideIcons.cloudSun, "Weather", "/weather"),
             ],
           ),
         ],
@@ -153,20 +168,25 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExperienceItem(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.orangeColor,
+  Widget _buildExperienceItem(IconData icon, String label, String navigate) {
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, navigate),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.orangeColor,
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        SizedBox(height: 5),
-        Text(label, style: GoogleFonts.poppins(fontSize: 12)),
-      ],
+          const SizedBox(height: 5),
+          Text(label, style: GoogleFonts.poppins(fontSize: 12)),
+        ],
+      ),
     );
   }
 

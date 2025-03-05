@@ -69,12 +69,7 @@ class IntroScreen extends StatelessWidget {
               const SizedBox(height: 80),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignUpScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/sign-up');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.orangeColor,

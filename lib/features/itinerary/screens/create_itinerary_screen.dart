@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../globals.dart';
 import '../widgets/itinerary-app_bar.dart';
 import 'create_iitinerary_by_ai_screen.dart';
 import '../../../core/styles/colors.dart';
@@ -13,6 +14,10 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 class CreateItinerary extends StatefulWidget {
   @override
   _CreateItineraryState createState() => _CreateItineraryState();
+}
+
+void updateTravelDays(int days) {
+  travelDays = days;
 }
 
 class _CreateItineraryState extends State<CreateItinerary> {
@@ -85,7 +90,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
   Future<void> _fetchLocations() async {
     try {
       final response = await _apiService.request(
-          path: '', method: 'GET', typeUrl: 'locationUrl', token: '');
+          path: '', method: 'GET', typeUrl: 'locationUrl', currentPath: '');
 
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -205,7 +210,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     labelText: 'How many days?*',
-                    hintText: 'E.g., 3',
+                    hintText: 'E.g., 2',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.location_on),
                   ),
@@ -220,8 +225,8 @@ class _CreateItineraryState extends State<CreateItinerary> {
                       return 'Invalid input. Please enter a valid number.';
                     } else if (days < 0) {
                       return 'Invalid day. Please enter a positive day.';
-                    } else if (days > 7) {
-                      return 'Invalid day. Please enter a value between 1 and 7.';
+                    } else if (days > 3) {
+                      return 'Invalid day. Please enter a value between 1 and 3.';
                     }
 
                     return null;
@@ -275,11 +280,12 @@ class _CreateItineraryState extends State<CreateItinerary> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
-                            // if (_formKey.currentState!.validate()) {
-                            //   ScaffoldMessenger.of(context).showSnackBar(
-                            //     SnackBar(content: Text('Đang tạo hành trình...')),
-                            //   );
-                            // }
+                            if (_formKey.currentState!.validate()) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Đang tạo hành trình...')),
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
@@ -312,6 +318,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
                                   ),
                                 ),
                               );
+                              updateTravelDays(int.parse(_dayController.text));
                             }
                           },
                           style: ElevatedButton.styleFrom(

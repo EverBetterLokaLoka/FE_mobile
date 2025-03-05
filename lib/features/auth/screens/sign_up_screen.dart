@@ -3,20 +3,19 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../core/styles/colors.dart';
 import '../../../core/utils/apis.dart';
+import '../../../widgets/notice_widget.dart';
 import '../../home/screens/term_of_service.dart';
 import '../services/auth_services.dart';
-import 'login_screen.dart';
 import '../../../core/constants/url_constant.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SignUpScreen(),
+    return Scaffold(
+      appBar: AppBar(title: Text("Sign Up")),
+      body: const SignUpScreen(),
     );
   }
 }
@@ -29,43 +28,53 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  String currentPath = "/sign-up";
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmController = TextEditingController();
+  final TextEditingController _passwordConfirmController =TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  late final Map<String, dynamic> responseData;
 
-  Future<void> _signUp() async {
+  Future<void> _signUp(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     final apiService = ApiService();
     final data = {
-      'fullName': _fullNameController.text.trim(),
+      'full_name': _fullNameController.text.trim(),
       'email': _emailController.text.trim(),
-      'password': _passwordController.text,
-      'passwordConfirm': _passwordConfirmController.text,
+      'password': _passwordController.text.trim(),
+      'confirm_password': _passwordConfirmController.text.trim(),
     };
 
+    print("register path$currentPath");
     try {
       final response = await apiService.request(
         path: '/auth/register',
         method: 'POST',
+        currentPath: currentPath,
         typeUrl: UrlConstant().baseUrl,
         data: data,
-        token: ''
       );
 
       if (response.statusCode == 201) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        String token = responseData["token"];
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString("auth_token", token);
-
+        responseData = jsonDecode(response.body);
+        String? token = responseData["token"];
+        if (token == null) {
+          throw Exception("Token is null");
+        }
+        AuthService().saveToken(token);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign-up successful!')),
         );
@@ -76,11 +85,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         );
       } else {
+        print(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sign-up failed: ${response.body}')),
         );
+        final message = responseData["message"];
+        if(message == 409){
+          showCustomNotice(context,"Email already exit.", "confirm");
+        }
       }
     } catch (e) {
+      print("loi$e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -153,7 +168,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _buildConfirmPasswordField(),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: _signUp,
+            onPressed: () => _signUp(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF8C00),
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 75),
@@ -342,12 +357,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const Text("Already have an account? "),
         GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Login(),
-              ),
-            );
+            Navigator.pushNamed(context, '/login');
           },
           child: const Text(
             "Sign in.",
