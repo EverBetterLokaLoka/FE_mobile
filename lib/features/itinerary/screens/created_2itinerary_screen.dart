@@ -133,7 +133,7 @@ class ItineraryCreated extends StatelessWidget {
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (context) => DetailItineraryScreen(itineraryItems: item),
+                    builder: (context) => DetailItineraryScreen(itineraryItems: item, type: "detail"),
                   ),
                 );
               },

@@ -28,12 +28,14 @@ class ItineraryResponse {
 }
 
 class Itinerary {
+  int? id;
   String? title;
   final String? description;
   final String? price;
   final List<Location> locations;
 
   Itinerary({
+    this.id,
     this.title,
     this.description,
     this.price,
@@ -42,12 +44,13 @@ class Itinerary {
 
   factory Itinerary.fromJson(Map<String, dynamic> json) {
     return Itinerary(
+      id: json['id'] != null ? json['id'] as int : 0,
       title: json['title'],
       description: json['description'],
       // price: (json['price'] as num).toDouble(),
       price: json['price'].toString(),
       locations:
-          (json['locations'] as List).map((e) => Location.fromJson(e)).toList() ?? [],
+          (json['locations'] as List).map((e) => Location.fromJson(e)).toList()
     );
   }
 

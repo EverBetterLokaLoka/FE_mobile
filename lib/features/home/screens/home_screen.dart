@@ -6,6 +6,8 @@ import '../../../widgets/app_bar_widget.dart';
 import '../../auth/services/auth_services.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -155,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: NeverScrollableScrollPhysics(),
             children: [
               _buildExperienceItem(
-                  LucideIcons.map, "Travel Itinerary", "/travel"),
+                  LucideIcons.map, "Travel Itinerary", "/navigation-map"),
               _buildExperienceItem(LucideIcons.users, "Friends", "/add-friend"),
               _buildExperienceItem(LucideIcons.shieldAlert, "SOS", "/sos"),
               _buildExperienceItem(LucideIcons.camera, "Moment", "/checkin"),

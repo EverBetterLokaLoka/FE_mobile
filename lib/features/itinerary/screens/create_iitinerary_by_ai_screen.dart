@@ -13,7 +13,7 @@ class CreateByAi extends StatefulWidget {
   final String startDate;
   final String endDate;
 
-  CreateByAi({
+  const CreateByAi({super.key,
     required this.location,
     required this.totalDay,
     required this.startDate,
@@ -61,7 +61,7 @@ class _CreateByAiState extends State<CreateByAi> {
       night = night - 1;
 
       final String prompt =
-          "I want to travel ${dateInfo}in ${widget.location} for ${widget.totalDay} Days and $night. "
+          "I want to navigation ${dateInfo}in ${widget.location} for ${widget.totalDay} Days and $night. "
           "My budget is $formattedBudget. "
           "I am interested in activities such as: ${_interests.entries.where((entry) => entry.value).map((entry) => entry.key).join(', ')}."
           "At least 4 location in one day. "
@@ -71,7 +71,6 @@ class _CreateByAiState extends State<CreateByAi> {
       final Map<String, dynamic> requestData = {
         'prompt': prompt,
       };
-      print(requestData);
       try {
         final response = await _apiService.request(
           path: '/itineraries/generate',
@@ -83,16 +82,14 @@ class _CreateByAiState extends State<CreateByAi> {
 
         final responseBody = response.body;
         final itineraryResponse = parseItineraryResponse(responseBody);
-
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ItineraryCreated(data: itineraryResponse),
           ),
         );
-      } catch (e, stackTrace) {
+      } catch (e) {
         print("Lỗi khi xử lý JSON: $e");
-        print("Stack Trace: $stackTrace");
       }
     } catch (error) {
       _showResponseDialog('Error', 'Failed to plan trip: $error');

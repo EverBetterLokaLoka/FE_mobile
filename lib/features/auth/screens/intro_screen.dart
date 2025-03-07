@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
-
 import '../../../core/styles/colors.dart';
 
 class IntroScreen extends StatelessWidget {

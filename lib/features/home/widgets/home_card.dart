@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class HomeCard extends StatelessWidget {
   final Map<String, String> destination;
 
-  const HomeCard({Key? key, required this.destination}) : super(key: key);
+  const HomeCard({super.key, required this.destination});
 
   @override
   Widget build(BuildContext context) {

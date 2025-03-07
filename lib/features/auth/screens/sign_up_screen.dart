@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../core/styles/colors.dart';
-import '../../../core/utils/apis.dart';
 import '../../../widgets/notice_widget.dart';
 import '../../home/screens/term_of_service.dart';
 import '../services/auth_services.dart';
-import '../../../core/constants/url_constant.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -13,9 +10,7 @@ class SignUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Sign Up", key: Key('signup_title')),
-      ),
+      appBar: AppBar(title: Text("Sign Up")),
       body: const SignUpScreen(),
     );
   }
@@ -29,9 +24,6 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  String currentPath = "/sign-up";
-  bool _autoValidate = false;  // Add this flag to control validation
-
   @override
   void initState() {
     super.initState();
@@ -41,71 +33,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmController = TextEditingController();
+  final TextEditingController _passwordConfirmController =
+  TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
   late final Map<String, dynamic> responseData;
 
   Future<void> _signUp(BuildContext context) async {
-    // Enable validation when sign up button is pressed
-    setState(() {
-      _autoValidate = true;
-    });
-
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    final authService = AuthService();
 
-    final apiService = ApiService();
-    final data = {
-      'full_name': _fullNameController.text.trim(),
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-      'confirm_password': _passwordConfirmController.text.trim(),
-    };
-
-    try {
-      final response = await apiService.request(
-        path: '/auth/register',
-        method: 'POST',
-        currentPath: currentPath,
-        typeUrl: UrlConstant().baseUrl,
-        data: data,
-      );
-
-      if (response.statusCode == 201) {
-        responseData = jsonDecode(response.body);
-        String? token = responseData["token"];
-        if (token == null) {
-          throw Exception("Token is null");
-        }
-        AuthService().saveToken(token);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign-up successful!')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TermOfService(),
-          ),
-        );
-      } else {
-        if (!mounted) return;
-        final message = responseData["message"];
-        if (message == 409) {
-          showCustomNotice(context, "Email already exists.", "confirm");
-        }
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    await authService.signUp(
+      context: context,
+      fullName: _fullNameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      confirmPassword: _passwordConfirmController.text,
+      onStart: () => setState(() => _isLoading = true),
+      onFinish: () => setState(() => _isLoading = false),
+    );
   }
 
   @override
@@ -125,9 +73,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
             child: Form(
               key: _formKey,
-              autovalidateMode: _autoValidate
-                  ? AutovalidateMode.onUserInteraction
-                  : AutovalidateMode.disabled,  // Only validate after submit
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -159,39 +104,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       child: Column(
         children: [
-          Text(
+          const Text(
             "Sign Up",
-            key: const Key('signup_header'),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFFFF8C00),
+              color: AppColors.orangeColor,
             ),
           ),
           const SizedBox(height: 20),
           _buildTextField(
-            "Full Name",
-            _fullNameController,
-            "Enter your fullname",
-            'fullname_field',
-          ),
+              "Full Name",
+              _fullNameController,
+              "Enter your fullname",
+              Icon(Icons.perm_identity_rounded, color: AppColors.orangeColor)),
           _buildEmailField(),
-          _buildPasswordField(),
+          _buildPasswordField("Password", _passwordController),
           _buildConfirmPasswordField(),
           const SizedBox(height: 20),
           ElevatedButton(
-            key: const Key('signup_button'),
-            onPressed: _isLoading ? null : () => _signUp(context),
+            onPressed: () => _signUp(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF8C00),
+              backgroundColor: AppColors.orangeColor,
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 75),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text(
+            child: const Text(
               "Sign up",
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
@@ -199,19 +139,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 20),
           _buildSocialLogin(),
           ElevatedButton.icon(
-            key: const Key('google_signup_button'),
             onPressed: () async {
               final user = await AuthService().signInWithGoogle();
-              if (user != null && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Welcome, ${user.displayName}!")),
-                );
+              if (user != null) {
+                showCustomNotice(context,
+                    "Your account has been created successfully.", "confirm");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TermOfService(),
                   ),
                 );
+              } else {
+                print("Sign up fail.");
               }
             },
             icon: Image.asset("assets/images/gg.png", height: 24),
@@ -253,31 +193,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(
-      String label,
-      TextEditingController controller,
-      String hintText,
-      String keyValue,
-      ) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      String hintText, Icon icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "$label *",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Row(children: [
+          Text("$label ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text("*", style: TextStyle(color: Colors.red))
+        ]),
         const SizedBox(height: 5),
         TextFormField(
-          key: Key(keyValue),
           controller: controller,
           decoration: InputDecoration(
             hintText: hintText,
+            prefixIcon: icon,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
-            if (!_autoValidate) return null;  // Don't validate until form is submitted
             if (value == null || value.isEmpty) {
-              return "$label is required";
+              return "Please enter your $label";
+            }
+            if (!RegExp(r'^[a-zA-ZÀ-ỹ\s]+$').hasMatch(value)) {
+              return "Only letters are allowed.";
             }
             return null;
           },
@@ -291,26 +229,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Email *",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Row(children: [
+          const Text("Email ", style: TextStyle(fontWeight: FontWeight.bold)),
+          Text("*", style: TextStyle(color: Colors.red))
+        ]),
         const SizedBox(height: 5),
         TextFormField(
-          key: const Key('email_field'),
           controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
             hintText: "Enter your email",
+            prefixIcon:
+            const Icon(Icons.email_rounded, color: AppColors.orangeColor),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
-            if (!_autoValidate) return null;  // Don't validate until form is submitted
             if (value == null || value.isEmpty) {
-              return "Email is required";
+              return "Please enter your email.";
             }
-            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return "Please enter a valid email";
+            if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                .hasMatch(value)) {
+              return "Please enter a valid email address.";
             }
             return null;
           },
@@ -320,24 +258,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(String label, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Password *",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Row(children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            " *",
+            style: TextStyle(color: Colors.red),
+          )
+        ]),
         const SizedBox(height: 5),
         TextFormField(
-          key: const Key('password_field'),
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
             hintText: "Enter your password",
             prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
             suffixIcon: IconButton(
-              key: const Key('toggle_password_visibility'),
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
                 color: Colors.grey,
@@ -351,12 +290,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
-            if (!_autoValidate) return null;  // Don't validate until form is submitted
             if (value == null || value.isEmpty) {
-              return "Password is required";
+              return "Please enter your $label";
             }
             if (value.length < 8 || value.length > 16) {
-              return "Password must be between 8 and 16 characters";
+              return "Password must be between 8 and 16 characters.";
+            }
+            if (value.contains(' ')) {
+              return "Password cannot contain spaces.";
+            }
+            if (!RegExp(r'[A-Z]').hasMatch(value)) {
+              return "Password must contain at least one uppercase letter.";
+            }
+            if (!RegExp(r'[a-z]').hasMatch(value)) {
+              return "Password must contain at least one lowercase letter.";
+            }
+            if (!RegExp(r'[0-9]').hasMatch(value)) {
+              return "Password must contain at least one numeric digit.";
             }
             return null;
           },
@@ -370,22 +320,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Confirm Password *",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Row(children: [
+          const Text("Confirm Password ",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            "*",
+            style: TextStyle(color: Colors.red),
+          )
+        ]),
         const SizedBox(height: 5),
         TextFormField(
-          key: const Key('confirm_password_field'),
           controller: _passwordConfirmController,
           obscureText: _obscureConfirmPassword,
           decoration: InputDecoration(
             hintText: "Confirm your password",
             prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
             suffixIcon: IconButton(
-              key: const Key('toggle_confirm_password_visibility'),
               icon: Icon(
-                _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                _obscureConfirmPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
                 color: Colors.grey,
               ),
               onPressed: () {
@@ -397,12 +351,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
-            if (!_autoValidate) return null;  // Don't validate until form is submitted
             if (value == null || value.isEmpty) {
-              return "Confirm Password is required";
-            }
-            if (value != _passwordController.text) {
-              return "Passwords do not match";
+              return "Please enter your confirm password.";
+            } else if (value.trim().isEmpty) {
+              return "Must contain characters other than spaces.";
+            } else if (value != _passwordController.text) {
+              return "Passwords do not match. Please try again.";
             }
             return null;
           },
@@ -418,7 +372,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         const Text("Already have an account? "),
         GestureDetector(
-          key: const Key('signin_link'),
           onTap: () {
             Navigator.pushNamed(context, '/login');
           },

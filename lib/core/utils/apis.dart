@@ -56,7 +56,7 @@ class ApiService {
       default:
         throw Exception('Unsupported HTTP method: $method');
     }
-
+    print(token);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
     } else {

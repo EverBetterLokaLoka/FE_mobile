@@ -162,7 +162,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
                   alignment: Alignment.center,
                   child: SizedBox.fromSize(
                     child: Text(
-                      'Build an itinerary and map out your \n upcoming travel plans',
+                      'Build an itinerary and map out your \n upcoming navigation plans',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     ),
@@ -223,7 +223,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
 
                     if (days == null) {
                       return 'Invalid input. Please enter a valid number.';
-                    } else if (days < 0) {
+                    } else if (days < 1) {
                       return 'Invalid day. Please enter a positive day.';
                     } else if (days > 3) {
                       return 'Invalid day. Please enter a value between 1 and 3.';
