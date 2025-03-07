@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lokaloka/features/auth/services/auth_services.dart';
 import 'package:lokaloka/features/auth/models/user.dart';
@@ -15,6 +14,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   UserNormal? user;
+  bool isLoading = true;
+  String? error;
 
   @override
   void initState() {
@@ -23,22 +24,40 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _fetchUserProfile();
   }
 
-  // Hàm lấy thông tin người dùng
   Future<void> _fetchUserProfile() async {
-    String? token = await AuthService().getToken();
-    if (token != null) {
-      // Fetch user profile using the token
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+
+    try {
+      String? token = await AuthService().getToken();
+      if (token == null) {
+        setState(() {
+          error = "No token available. Please log in again.";
+          isLoading = false;
+        });
+        Navigator.pushReplacementNamed(context, '/login');
+        return;
+      }
+
       final response = await ProfileService().getUserProfile();
       if (response != null) {
         setState(() {
-          user = response; // Update UI with fetched user data
+          user = response;
+          isLoading = false;
         });
       } else {
-        print("Failed to fetch user profile");
+        setState(() {
+          error = "Failed to fetch user profile";
+          isLoading = false;
+        });
       }
-    } else {
-      print("No token available, please log in again.");
-      // Redirect to login page or show login dialog if token is not found
+    } catch (e) {
+      setState(() {
+        error = "Error: $e";
+        isLoading = false;
+      });
     }
   }
 
@@ -61,32 +80,61 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         title: Text('Profile', style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
-      body: user == null
-          ? Center(child: CircularProgressIndicator()) // Hiển thị loading nếu chưa có thông tin người dùng
-          : Column(
-        children: [
-          ProfileHeader(user: user!), // Truyền thông tin người dùng vào ProfileHeader
-          TabBar(
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(error!, style: TextStyle(color: Colors.red)),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchUserProfile,
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (user == null) {
+      return Center(child: Text('No user data available'));
+    }
+
+    return Column(
+      children: [
+        ProfileHeader(user: user!),
+        TabBar(
+          controller: _tabController,
+          labelColor: Colors.orange,
+          unselectedLabelColor: Colors.black,
+          indicatorColor: Colors.orange,
+          tabs: [
+            Tab(text: "My Home"),
+            Tab(text: "Account"),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
             controller: _tabController,
-            labelColor: Colors.orange,
-            unselectedLabelColor: Colors.black,
-            indicatorColor: Colors.orange,
-            tabs: [
-              Tab(text: "My Home"),
-              Tab(text: "Account"),
+            children: [
+              HomeTab(),
+              AccountTab(
+                user: user!,
+                onProfileUpdated: _fetchUserProfile,
+              ),
             ],
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                HomeTab(), // Giao diện "My Home"
-                AccountTab(user: user!), // Truyền thông tin người dùng vào AccountTab
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
