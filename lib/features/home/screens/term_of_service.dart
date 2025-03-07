@@ -3,16 +3,16 @@ import 'package:lokaloka/features/home/screens/trust_phone_screen.dart';
 
 import '../../../core/styles/colors.dart';
 
-final String Term = """1. Term
+final Term = """1. Term
 This agreement is effective as of the date you access or use the App and will remain in effect until terminated as outlined below.
 2. Services to Be Provided
-The App offers an AI-powered travel assistant with features including:
+The App offers an AI-powered navigation assistant with features including:
 * Personalized trip planning suggestions
 * Map navigation with flagging features
 * Real-time weather forecast updates
 * Connection with friends to share moments
 * Emergency alerts and location sharing for safety
-* Dynamic travel plan updates
+* Dynamic navigation plan updates
 3. Fees
 The App is free to use unless otherwise specified. Certain premium features may require a subscription or one-time fee, which will be disclosed before purchase.
 4. Reimbursement of Certain Costs
@@ -20,7 +20,7 @@ Users are responsible for any internet, mobile, or data costs incurred while acc
 5. Billing
 All billing, when applicable, will be processed through the respective app stores or platforms, subject to their payment terms and conditions.
 6. Limitation on Liability; Indemnification
-The App is provided "as is" without warranty of any kind. We are not liable for any damages, including loss of data, travel disruptions, or personal injury resulting from the use of the App. Users agree to indemnify and hold harmless the company from any claims arising out of their use of the App.
+The App is provided "as is" without warranty of any kind. We are not liable for any damages, including loss of data, navigation disruptions, or personal injury resulting from the use of the App. Users agree to indemnify and hold harmless the company from any claims arising out of their use of the App.
 7. Employees Deemed to Be Consultants
 All individuals working on the App are independent consultants and not employees of the users.
 8. Independent Contractor
@@ -51,6 +51,8 @@ Users agree to perform any additional acts required to carry out the purposes of
 This agreement may be executed in multiple counterparts, each of which will be deemed an original.""";
 
 class TermOfService extends StatefulWidget {
+  const TermOfService({super.key});
+
   @override
   _TermOfServiceState createState() => _TermOfServiceState();
 }

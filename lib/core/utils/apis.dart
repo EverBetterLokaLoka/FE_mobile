@@ -4,7 +4,7 @@ import '../../features/auth/services/auth_services.dart';
 import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://1fa1-27-69-241-207.ngrok-free.app/api';
+  final String baseUrl = 'https://edd9-113-176-99-140.ngrok-free.app/api';
 
   final String locationUrl = 'https://provinces.open-api.vn/api/p';
 
@@ -55,7 +55,7 @@ class ApiService {
       default:
         throw Exception('Unsupported HTTP method: $method');
     }
-
+    print(token);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
     } else {

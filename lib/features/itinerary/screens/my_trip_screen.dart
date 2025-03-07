@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
+import 'package:lokaloka/features/itinerary/models/Itinerary.dart';
+import 'package:lokaloka/features/itinerary/screens/detail_itinerary_screen.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../../widgets/notice_widget.dart';
+import '../../navigation/screens/map_navigation_screen.dart';
 import '../services/itinerary_api.dart';
 
 class MyTrip extends StatefulWidget {
@@ -28,7 +31,6 @@ class _MyTripState extends State<MyTrip> {
     setState(() => isLoading = true);
 
     final itineraries = await _itineraryService.fetchItineraries();
-
     setState(() {
       allItineraries = itineraries;
       _filterItineraries();
@@ -58,7 +60,7 @@ class _MyTripState extends State<MyTrip> {
       } else {
         await showCustomNotice(context, "Fail to delete itinerary", "error");
       }
-    }else{
+    } else {
       setState(() {
         allItineraries.removeWhere((item) => item['id'] == trip['id']);
         _filterItineraries();
@@ -81,9 +83,32 @@ class _MyTripState extends State<MyTrip> {
 
   void _deleteItinerary(Map<String, dynamic> trip) {
     setState(() {
-      _deleteItineraryApi(trip, "Phat"); //Sau khi co profile thi doi cho nay !!!
+      _deleteItineraryApi(
+          trip, "Phat"); //Sau khi co profile thi doi cho nay !!!
     });
     print("Deleted itinerary: ${trip['title']}");
+  }
+
+  Future<void> getById(int id) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(child: CircularProgressIndicator()),
+    );
+
+    Itinerary data = await ItineraryApi().getItineraryById(id);
+
+    if (!context.mounted) return;
+
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            DetailItineraryScreen(itineraryItems: data, type: 'view'),
+      ),
+    );
+    print("data cha${data.locations.length}");
   }
 
   @override
@@ -248,6 +273,9 @@ class _MyTripState extends State<MyTrip> {
                         if (value == 'share') {
                           // Share
                           _shareItinerary(trip);
+                        } else if (value == 'view') {
+                          Itinerary itinerary = Itinerary.fromJson(trip);
+                          getById(itinerary.id!);
                         } else if (value == 'delete') {
                           _deleteItinerary(trip);
                         }
@@ -260,6 +288,17 @@ class _MyTripState extends State<MyTrip> {
                               Icon(Icons.share, color: Colors.black),
                               SizedBox(width: 10),
                               Text('Share'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'view',
+                          child: Row(
+                            children: [
+                              Icon(Icons.remove_red_eye,
+                                  color: AppColors.primaryColor),
+                              SizedBox(width: 10),
+                              Text('View'),
                             ],
                           ),
                         ),
@@ -278,7 +317,7 @@ class _MyTripState extends State<MyTrip> {
                       child: ElevatedButton(
                         onPressed: null,
                         style: ElevatedButton.styleFrom(
-                          minimumSize: Size(35, 23),
+                          minimumSize: Size(30, 20),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -287,8 +326,11 @@ class _MyTripState extends State<MyTrip> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        //Chuyen sang navigation map
+                      onPressed: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => MapNavigationScreen()))
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(35, 23),
