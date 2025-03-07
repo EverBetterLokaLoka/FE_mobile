@@ -12,8 +12,9 @@ import 'package:timeline_tile/timeline_tile.dart';
 
 class DetailItineraryScreen extends StatefulWidget {
   final Itinerary itineraryItems;
+  final String type;
 
-  const DetailItineraryScreen({Key? key, required this.itineraryItems})
+  const DetailItineraryScreen({Key? key, required this.itineraryItems, required this.type})
       : super(key: key);
 
   @override
@@ -80,7 +81,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.cyan,
+                          color: AppColors.primaryColor,
                         ),
                       ),
                     ),
@@ -88,7 +89,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                     const Text(
                       "Name:",
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
                     TextField(
@@ -107,7 +108,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                         child: Text(
                           errorMessage!,
                           style:
-                              const TextStyle(color: Colors.red, fontSize: 12),
+                          const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),
                     const SizedBox(height: 20),
@@ -125,7 +126,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.cyan,
+                            backgroundColor: AppColors.primaryColor,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 10),
                             shape: RoundedRectangleBorder(
@@ -223,25 +224,27 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
             Expanded(
               child: filteredLocations.isNotEmpty
                   ? ListView.builder(
-                      padding: const EdgeInsets.all(14.0),
-                      itemCount: filteredLocations.length,
-                      itemBuilder: (context, index) {
-                        final location = filteredLocations[index];
-                        return _buildTimelineTile(location, index, index == 0,
-                            index == filteredLocations.length - 1);
-                      },
-                    )
+                padding: const EdgeInsets.all(14.0),
+                itemCount: filteredLocations.length,
+                itemBuilder: (context, index) {
+                  final location = filteredLocations[index];
+                  return _buildTimelineTile(location, index, index == 0,
+                      index == filteredLocations.length - 1);
+                },
+              )
                   : const Center(
-                      child: Text(
-                        "No locations available for this day.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                    ),
+                child: Text(
+                  "No locations available for this day.",
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: Stack(
+      floatingActionButton: widget.type == "view"
+          ? null
+          : Stack(
         alignment: Alignment.bottomRight,
         children: [
           if (_isExpanded) ...[
@@ -417,7 +420,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                         ),
                       ),
                       ...location.activities.map(
-                        (activity) => Padding(
+                            (activity) => Padding(
                           padding: const EdgeInsets.only(top: 5),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

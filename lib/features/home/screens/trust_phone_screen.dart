@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/styles/colors.dart';
 
 class TrustPhoneScreen extends StatefulWidget {
+  const TrustPhoneScreen({super.key});
+
   @override
   _TrustPhoneScreenState createState() => _TrustPhoneScreenState();
 }

@@ -6,7 +6,7 @@ import '../features/auth/screens/intro_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/itinerary/screens/create_itinerary_screen.dart';
-import '../features/travel/screens/map_screen.dart';
+import '../features/navigation/screens/map_screen.dart';
 
 final router = RoutesConstant();
 

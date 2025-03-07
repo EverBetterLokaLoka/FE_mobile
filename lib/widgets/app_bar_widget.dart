@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/styles/colors.dart';
 import '../features/notification/screens/notification_screen.dart';
-import '../features/travel/screens/travel_map_screen.dart';
 import 'menu_widget.dart';
 
 class AppBarCustom extends StatelessWidget {
+  const AppBarCustom({super.key});
+
   @override
   Widget build(BuildContext context) {
     String? currentRoute = ModalRoute.of(context)?.settings.name;

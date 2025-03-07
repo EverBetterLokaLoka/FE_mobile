@@ -1,10 +1,13 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/constants/url_constant.dart';
 import '../../../core/utils/apis.dart';
+import '../../../widgets/notice_widget.dart';
+import '../../home/screens/term_of_service.dart';
 import '../models/user.dart';
 
 class AuthService {
@@ -34,13 +37,76 @@ class AuthService {
     }
   }
 
+  Future<void> signUp({
+    required BuildContext context,
+    required String fullName,
+    required String email,
+    required String password,
+    required String confirmPassword,
+    required VoidCallback onStart,
+    required VoidCallback onFinish,
+  }) async {
+    onStart();
+
+    final data = {
+      'full_name': fullName.trim(),
+      'email': email.trim(),
+      'password': password.trim(),
+      'confirm_password': confirmPassword.trim(),
+    };
+
+    try {
+      final response = await _apiService.request(
+        path: '/auth/register',
+        method: 'POST',
+        typeUrl: UrlConstant().baseUrl,
+        currentPath: '/sign-up',
+        data: data,
+      );
+
+      if (response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        String? token = responseData["token"];
+        if (token == null) throw Exception("Token is null");
+
+        saveToken(token);
+        showCustomNotice(
+            context, 'Your account has been created successfully.', 'confirm');
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TermOfService()),
+        );
+      } else {
+        final responseData = jsonDecode(response.body);
+        print(
+            'An error occurred while processing your registration. Please try again later. ${responseData["message"]}');
+        showCustomNotice(
+            context,
+            "An error occurred while processing your registration. Please try again later.",
+            "notice");
+
+        if (response.statusCode == 409) {
+          showCustomNotice(
+              context,
+              "This email is already in use. Please use a different email or log in.",
+              "confirm");
+        }
+      }
+    } catch (e) {
+      showCustomNotice(context, e.toString(), 'notice');
+    } finally {
+      onFinish();
+    }
+  }
+
   Future<UserNormal?> signIn(
       String email, String password, String currentPath) async {
     try {
       final response = await _apiService.request(
         path: '/auth/login',
         method: 'POST',
-        typeUrl: 'baseUrl',
+        typeUrl: UrlConstant().baseUrl,
         currentPath: currentPath,
         data: {
           'email': email,
@@ -49,8 +115,14 @@ class AuthService {
       );
 
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      String token = responseData["token"];
-      saveToken(token);
+      String? token = responseData["token"];
+
+      if (token == null) {
+        print("Token is null");
+        return null;
+      }
+
+      await saveToken(token);
 
       if (responseData.containsKey('data')) {
         return UserNormal.fromJson(responseData['data']);
@@ -79,11 +151,13 @@ class AuthService {
       return null;
     }
 
+    print("Retrieved token: $token");
+
     int currentTime = DateTime.now().millisecondsSinceEpoch;
     int elapsedTime = (currentTime - savedTime) ~/ 1000;
 
     if (elapsedTime > 1500) {
-      print("Token expired! User needs to log in again.");
+      print("Token expired! Removing...");
       await prefs.remove("auth_token");
       await prefs.remove("token_saved_time");
       return null;

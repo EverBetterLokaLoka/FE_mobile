@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
+import '../../../widgets/notice_widget.dart';
 import '../services/auth_services.dart';
 import 'forgot_password_screen.dart';
 
@@ -29,25 +30,15 @@ class _LoginState extends State<Login> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter your email and password!")),
-      );
       return;
     }
-    print("login path$currentPath");
     var data = await _authService.signIn(email, password, currentPath);
 
     if (data != null) {
       print("Login successful! ${data.name}");
-
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text("Login successful!")),
-      // );
       Navigator.pushNamed(context, '/home');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed. Please check your information!")),
-      );
+      showCustomNotice(context, "Invalid email or password. Please try again.", "error");
     }
   }
 
@@ -130,10 +121,12 @@ class _LoginState extends State<Login> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Email Field
-                        const Text("Email*",
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold)),
+                        Row(children: [
+                          const Text("Email ",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text("*", style: TextStyle(color: Colors.red))
+                        ]),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: _emailController,
@@ -148,14 +141,20 @@ class _LoginState extends State<Login> {
                             if (value == null || value.isEmpty) {
                               return "Please enter your email";
                             }
+                            if (value.trim().isEmpty) {
+                              return "Must contain characters other than spaces";
+                            }
                             return null;
                           },
                         ),
                         const SizedBox(height: 15),
 
-                        const Text("Password*",
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold)),
+                        Row(children: [
+                          const Text("Password ",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text("*", style: TextStyle(color: Colors.red))
+                        ]),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: _passwordController,
@@ -184,9 +183,13 @@ class _LoginState extends State<Login> {
                             if (value == null || value.isEmpty) {
                               return "Please enter your password";
                             }
+                            if (value.trim().isEmpty) {
+                              return "Must contain characters other than spaces";
+                            }
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 15),
 
                         // Forgot Password Button
@@ -216,7 +219,9 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
-                    login(context);
+                    if (_formKey.currentState!.validate()) {
+                      login(context);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.orangeColor,

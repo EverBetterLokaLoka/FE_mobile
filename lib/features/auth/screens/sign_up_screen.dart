@@ -1,12 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import '../../../core/styles/colors.dart';
-import '../../../core/utils/apis.dart';
 import '../../../widgets/notice_widget.dart';
 import '../../home/screens/term_of_service.dart';
 import '../services/auth_services.dart';
-import '../../../core/constants/url_constant.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -28,8 +24,6 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  String currentPath = "/sign-up";
-
   @override
   void initState() {
     super.initState();
@@ -39,7 +33,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmController =TextEditingController();
+  final TextEditingController _passwordConfirmController =
+      TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -48,60 +43,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _signUp(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    final authService = AuthService();
 
-    final apiService = ApiService();
-    final data = {
-      'full_name': _fullNameController.text.trim(),
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-      'confirm_password': _passwordConfirmController.text.trim(),
-    };
-
-    print("register path$currentPath");
-    try {
-      final response = await apiService.request(
-        path: '/auth/register',
-        method: 'POST',
-        currentPath: currentPath,
-        typeUrl: UrlConstant().baseUrl,
-        data: data,
-      );
-
-      if (response.statusCode == 201) {
-        responseData = jsonDecode(response.body);
-        String? token = responseData["token"];
-        if (token == null) {
-          throw Exception("Token is null");
-        }
-        AuthService().saveToken(token);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign-up successful!')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TermOfService(),
-          ),
-        );
-      } else {
-        print(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-up failed: ${response.body}')),
-        );
-        final message = responseData["message"];
-        if(message == 409){
-          showCustomNotice(context,"Email already exit.", "confirm");
-        }
-      }
-    } catch (e) {
-      print("loi$e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    await authService.signUp(
+      context: context,
+      fullName: _fullNameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      confirmPassword: _passwordConfirmController.text,
+      onStart: () => setState(() => _isLoading = true),
+      onFinish: () => setState(() => _isLoading = false),
+    );
   }
 
   @override
@@ -157,12 +109,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFFFF8C00),
+              color: AppColors.orangeColor,
             ),
           ),
           const SizedBox(height: 20),
           _buildTextField(
-              "Full Name", _fullNameController, "Enter your fullname"),
+              "Full Name",
+              _fullNameController,
+              "Enter your fullname",
+              Icon(Icons.perm_identity_rounded, color: AppColors.orangeColor)),
           _buildEmailField(),
           _buildPasswordField("Password", _passwordController),
           _buildConfirmPasswordField(),
@@ -170,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ElevatedButton(
             onPressed: () => _signUp(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF8C00),
+              backgroundColor: AppColors.orangeColor,
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 75),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -187,10 +142,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             onPressed: () async {
               final user = await AuthService().signInWithGoogle();
               if (user != null) {
-                print("Đăng ký thành công: ${user.displayName}");
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Chào mừng, ${user.displayName}!")),
-                );
+                showCustomNotice(context,
+                    "Your account has been created successfully.", "confirm");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -198,7 +151,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 );
               } else {
-                print("Đăng ký thất bại.");
+                print("Sign up fail.");
               }
             },
             icon: Image.asset("assets/images/gg.png", height: 24),
@@ -240,22 +193,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(
-      String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      String hintText, Icon icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("$label *", style: const TextStyle(fontWeight: FontWeight.bold)),
+        Row(children: [
+          Text("$label ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text("*", style: TextStyle(color: Colors.red))
+        ]),
         const SizedBox(height: 5),
         TextFormField(
           controller: controller,
           decoration: InputDecoration(
             hintText: hintText,
+            prefixIcon: icon,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return "$label is required";
+              return "Please enter your $label";
+            }
+            if (!RegExp(r'^[a-zA-ZÀ-ỹ\s]+$').hasMatch(value)) {
+              return "Only letters are allowed.";
             }
             return null;
           },
@@ -266,14 +226,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _buildEmailField() {
-    return _buildTextField("Email", _emailController, "Enter your email");
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Text("Email ", style: TextStyle(fontWeight: FontWeight.bold)),
+          Text("*", style: TextStyle(color: Colors.red))
+        ]),
+        const SizedBox(height: 5),
+        TextFormField(
+          controller: _emailController,
+          decoration: InputDecoration(
+            hintText: "Enter your email",
+            prefixIcon:
+                const Icon(Icons.email_rounded, color: AppColors.orangeColor),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter your email.";
+            }
+            if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                .hasMatch(value)) {
+              return "Please enter a valid email address.";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
   }
 
   Widget _buildPasswordField(String label, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("$label *", style: const TextStyle(fontWeight: FontWeight.bold)),
+        Row(children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            " *",
+            style: TextStyle(color: Colors.red),
+          )
+        ]),
         const SizedBox(height: 5),
         TextFormField(
           controller: _passwordController,
@@ -296,9 +291,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return "$label is required";
-            } else if (value.length < 8 && value.length > 16) {
-              return "Password must be at least 8 characters long and 16 characters.";
+              return "Please enter your $label";
+            }
+            if (value.length < 8 || value.length > 16) {
+              return "Password must be between 8 and 16 characters.";
+            }
+            if (value.contains(' ')) {
+              return "Password cannot contain spaces.";
+            }
+            if (!RegExp(r'[A-Z]').hasMatch(value)) {
+              return "Password must contain at least one uppercase letter.";
+            }
+            if (!RegExp(r'[a-z]').hasMatch(value)) {
+              return "Password must contain at least one lowercase letter.";
+            }
+            if (!RegExp(r'[0-9]').hasMatch(value)) {
+              return "Password must contain at least one numeric digit.";
             }
             return null;
           },
@@ -312,12 +320,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Confirm Password *",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        Row(children: [
+          const Text("Confirm Password ",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            "*",
+            style: TextStyle(color: Colors.red),
+          )
+        ]),
         const SizedBox(height: 5),
         TextFormField(
           controller: _passwordConfirmController,
-          obscureText: true,
+          obscureText: _obscureConfirmPassword,
           decoration: InputDecoration(
             hintText: "Confirm your password",
             prefixIcon: const Icon(Icons.lock, color: AppColors.orangeColor),
@@ -338,9 +352,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return "Confirm Password is required";
+              return "Please enter your confirm password.";
+            } else if (value.trim().isEmpty) {
+              return "Must contain characters other than spaces.";
             } else if (value != _passwordController.text) {
-              return "Passwords do not match";
+              return "Passwords do not match. Please try again.";
             }
             return null;
           },

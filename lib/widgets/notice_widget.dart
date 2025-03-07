@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/styles/colors.dart';
-
 Future<bool?> showCustomNotice(
     BuildContext context, String message, String type) async {
   return showDialog<bool>(
@@ -60,7 +58,7 @@ Future<bool?> showCustomNotice(
                       Navigator.of(context).pop(true);
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
+                      backgroundColor: Colors.cyan,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
                       shape: RoundedRectangleBorder(

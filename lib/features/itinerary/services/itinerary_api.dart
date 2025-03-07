@@ -85,6 +85,37 @@ class ItineraryApi {
     return false;
   }
 
+  Future<Itinerary> getItineraryById(int itineraryId) async {
+    try {
+      final response = await _apiService.request(
+        path: '/itineraries/$itineraryId',
+        method: 'GET',
+        typeUrl: 'baseUrl',
+        currentPath: '',
+      );
+
+      if (response.statusCode == 200) {
+        final dynamic responseBody = jsonDecode(response.body);
+
+        if (responseBody is Map<String, dynamic>) {
+          if (responseBody.containsKey('data') &&
+              responseBody['data'] != null) {
+            return Itinerary.fromJson(responseBody['data']);
+          }
+          return Itinerary(
+              id: 0,
+              title: "Unknown",
+              description: "No data",
+              price: "0",
+              locations: []);
+        }
+      }
+    } catch (e) {
+      print("Error fetching itinerary by ID: $e");
+    }
+    return Itinerary(locations: [], id: 0);
+  }
+
   Future<bool?> deleteItinerary(int itineraryId) async {
     try {
       final response = await _apiService.request(
@@ -99,11 +130,11 @@ class ItineraryApi {
         return true;
       } else {
         print("Failed to delete itinerary: ${response.body}");
-        return null;
+        return false;
       }
     } catch (e) {
       print("Error deleting itinerary: $e");
-      return null;
+      return false;
     }
   }
 }
