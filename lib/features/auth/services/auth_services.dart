@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/url_constant.dart';
 import '../../../core/utils/apis.dart';
@@ -204,4 +205,42 @@ class AuthService {
       print("Token is still valid!");
     }
   }
+  // Add a new method to save the username in SharedPreferences
+  Future<void> saveUserName(String username) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("user_name", username);
+  }
+
+// Modify getUserNameFromToken to save the username
+  Future<String?> getUserNameFromToken() async {
+    try {
+      String? token = await getToken();
+      if (token == null) {
+        print("No token found!");
+        return null;
+      }
+
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+      if (decodedToken.containsKey('name')) {
+        String userName = decodedToken['name'];
+        // Save the username
+        await saveUserName(userName);
+        return userName;
+      } else {
+        print("Token doesn't contain a username!");
+        return null;
+      }
+    } catch (e) {
+      print("Error decoding token: $e");
+      return null;
+    }
+  }
+  // Method to get username from SharedPreferences
+  Future<String?> getUserNameFromPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString("user_name");
+  }
+
+
 }

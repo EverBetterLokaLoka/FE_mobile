@@ -4,8 +4,10 @@ class Post {
   final String content;
   final int userId;
   final String userEmail;
+  final String userName;
   final String createdAt;
   final String? updatedAt;
+  final String avatar;
   final List<Comment> comments;
   final List<Like> likes;
   final List<PostImage> images;
@@ -19,8 +21,10 @@ class Post {
     required this.content,
     required this.userId,
     required this.userEmail,
+    required this.userName,
     required this.createdAt,
     this.updatedAt,
+    required this.avatar,
     required this.comments,
     required this.likes,
     required this.images,
@@ -31,24 +35,26 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      id: json['id'],
-      title: json['title'],
-      content: json['content'],
-      userId: json['user_id'],
-      userEmail: json['userEmail'],
-      createdAt: json['createdAt'],
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      content: json['content'] ?? '',
+      userId: json['user_id'] ?? 0,
+      userEmail: json['userEmail'] ?? '',
+      userName: json['userName'] ?? '',
+      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
       updatedAt: json['updatedAt'],
-      comments: (json['comments'] as List)
-          .map((comment) => Comment.fromJson(comment))
-          .toList(),
-      likes: (json['likes'] as List)
-          .map((like) => Like.fromJson(like))
-          .toList(),
-      images: (json['images'] as List)
-          .map((image) => PostImage.fromJson(image))
-          .toList(),
-      likeCount: json['likeCount'],
-      commentCount: json['commentCount'],
+      avatar: json['avatar'] ?? '',
+      comments: (json['comments'] as List<dynamic>?)
+          ?.map((comment) => Comment.fromJson(comment))
+          .toList() ?? [],
+      likes: (json['likes'] as List<dynamic>?)
+          ?.map((like) => Like.fromJson(like))
+          .toList() ?? [],
+      images: (json['images'] as List<dynamic>?)
+          ?.map((image) => PostImage.fromJson(image))
+          .toList() ?? [],
+      likeCount: json['likeCount'] ?? 0,
+      commentCount: json['commentCount'] ?? 0,
       destroyed: json['destroyed'] ?? false,
     );
   }
@@ -60,9 +66,11 @@ class Comment {
   final int postId;
   final int userId;
   final String userEmail;
+  final  String userName;
   final String createdAt;
   final String? updatedAt;
   final bool destroyed;
+  final String avatar;
 
   Comment({
     required this.id,
@@ -70,21 +78,25 @@ class Comment {
     required this.postId,
     required this.userId,
     required this.userEmail,
+    required this.userName,
     required this.createdAt,
     this.updatedAt,
     required this.destroyed,
+    required this.avatar
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
-      id: json['id'],
-      content: json['content'],
-      postId: json['postId'],
-      userId: json['userId'],
-      userEmail: json['userEmail'],
-      createdAt: json['createdAt'],
+      id: json['id'] ?? 0,
+      content: json['content'] ?? '',
+      postId: json['postId'] ?? 0,
+      userId: json['userId'] ?? 0,
+      userEmail: json['userEmail'] ?? '',
+      userName: json['userName'] ?? '',
+      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
       updatedAt: json['updatedAt'],
       destroyed: json['destroyed'] ?? false,
+      avatar: json['avatar']?? ''
     );
   }
 }
@@ -106,11 +118,11 @@ class Like {
 
   factory Like.fromJson(Map<String, dynamic> json) {
     return Like(
-      id: json['id'],
-      postId: json['postId'],
-      userId: json['userId'],
-      userEmail: json['userEmail'],
-      createdAt: json['createdAt'],
+      id: json['id'] ?? 0,
+      postId: json['postId'] ?? 0,
+      userId: json['userId'] ?? 0,
+      userEmail: json['userEmail'] ?? '',
+      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
     );
   }
 }
@@ -146,19 +158,18 @@ class PostImage {
 
   factory PostImage.fromJson(Map<String, dynamic> json) {
     return PostImage(
-      id: json['id'],
-      content: json['content'],
+      id: json['id'] ?? 0,
+      content: json['content'] ?? '',
       shares: json['shares'],
       locationId: json['locationId'],
-      userId: json['userId'],
-      postId: json['postId'],
+      userId: json['userId'] ?? 0,
+      postId: json['postId'] ?? 0,
       mapId: json['mapId'],
       activityId: json['activityId'],
-      userEmail: json['userEmail'],
-      type: json['type'],
+      userEmail: json['userEmail'] ?? '',
+      type: json['type'] ?? '',
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );
   }
 }
-
