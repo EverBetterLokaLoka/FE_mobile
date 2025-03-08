@@ -105,10 +105,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 Spacer(),
-                CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/avt.png'),
-                  radius: 22,
-                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/profile');
+                  },
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/avt.png'),
+                    radius: 22,
+                  ),
+                )
               ],
             ),
             SizedBox(height: 20),

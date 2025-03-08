@@ -1,0 +1,2 @@
+E:/ANDROIDSTUDIO/Mobile/android/app/.cxx/Debug/1t6n6k5h/arm64-v8a/CMakeFiles/edit_cache.dir
+E:/ANDROIDSTUDIO/Mobile/android/app/.cxx/Debug/1t6n6k5h/arm64-v8a/CMakeFiles/rebuild_cache.dir

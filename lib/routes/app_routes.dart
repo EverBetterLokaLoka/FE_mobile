@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokaloka/features/profile/screens/profile_screen.dart';
 import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
 import 'package:lokaloka/features/itinerary/screens/my_trip_screen.dart';
 import '../core/constants/routes_constant.dart';
@@ -33,7 +34,7 @@ class AppRoutes {
         return MaterialPageRoute(
             builder: (_) => CreateItinerary(), settings: settings);
       case '/profile':
-      // return MaterialPageRoute(builder: (_) => ProfileScreen(), settings: settings);
+      return MaterialPageRoute(builder: (_) => ProfileScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

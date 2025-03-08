@@ -34,7 +34,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _passwordConfirmController =
-      TextEditingController();
+  TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -239,7 +239,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           decoration: InputDecoration(
             hintText: "Enter your email",
             prefixIcon:
-                const Icon(Icons.email_rounded, color: AppColors.orangeColor),
+            const Icon(Icons.email_rounded, color: AppColors.orangeColor),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           validator: (value) {
