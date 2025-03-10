@@ -8,6 +8,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lokaloka/globals.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/styles/colors.dart';
@@ -326,7 +327,7 @@ class _MapScreenState extends State<MapNavigationScreen> {
                 right: 7,
                 child: GestureDetector(
                   onTap: () async {
-                    const phoneNumber = "tel:0914017875";
+                    final phoneNumber = "tel:$trustPhone";
                     if (await canLaunchUrl(Uri.parse(phoneNumber))) {
                       await launchUrl(Uri.parse(phoneNumber));
                     } else {

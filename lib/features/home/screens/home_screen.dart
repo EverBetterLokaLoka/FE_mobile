@@ -8,6 +8,7 @@ import '../../../globals.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../auth/services/auth_services.dart';
 import '../../navigation/services/navigation_api.dart';
+import '../../profile/services/profile_services.dart';
 import '../../weather/services/LocationService.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   LatLng? currentLocation;
+  final ProfileService _profileService = ProfileService();
 
   @override
   void initState() {
@@ -28,6 +30,15 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     _initializeLocation();
     getCity();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final response = await _profileService.getUserProfile();
+
+    if (response != null) {
+      trustPhone = response.emergency_numbers;
+    }
   }
 
   void getCity() async {
@@ -202,10 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 Spacer(),
-                CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/avt.png'),
-                  radius: 22,
-                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/profile');
+                  },
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/avt.png'),
+                    radius: 22,
+                  ),
+                )
               ],
             ),
             SizedBox(height: 20),
