@@ -32,7 +32,18 @@ class _LoginState extends State<Login> {
     if (email.isEmpty || password.isEmpty) {
       return;
     }
+
     var data = await _authService.signIn(email, password, currentPath);
+
+    if (data == "NO_INTERNET") {
+      showCustomNotice(context, "No internet connection. Please check your Wi-Fi or mobile data.", "error");
+      return;
+    }
+
+    if (data == "INVALID_RESPONSE") {
+      showCustomNotice(context, "Server error! Please try again later.", "error");
+      return;
+    }
 
     if (data != null) {
       print("Login successful! ${data.name}");

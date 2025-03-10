@@ -4,7 +4,9 @@ import '../../features/auth/services/auth_services.dart';
 import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://edd9-113-176-99-140.ngrok-free.app/api';
+  final String baseUrl = 'https://1e8f-113-176-99-140.ngrok-free.app/api';
+
+  final String imgKey = "b49d82fbb2dbf713c012d1441415c8cb4e969a4c";
 
   final String locationUrl = 'https://provinces.open-api.vn/api/p';
 
@@ -69,5 +71,37 @@ class ApiService {
       'Accept': 'application/json',
       "Authorization": "Bearer $token",
     };
+  }
+
+  Future<String?> fetchImageUrl(String province) async {
+    var headers = {
+      'X-API-KEY': imgKey,
+      'Content-Type': 'application/json'
+    };
+
+    var url = Uri.parse('https://google.serper.dev/images');
+
+    var body = json.encode({"q": "$province city", "location": "Vietnam", "gl": "vn"});
+
+    try {
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(response.body);
+
+        if (jsonResponse['images'] != null &&
+            jsonResponse['images'].isNotEmpty) {
+          print(jsonResponse['images'][0]['imageUrl']);
+          return jsonResponse['images'][0]['imageUrl'];
+        }
+        return null;
+      } else {
+        print('Error: ${response.reasonPhrase}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception: $e');
+      return null;
+    }
   }
 }

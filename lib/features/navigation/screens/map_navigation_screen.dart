@@ -8,13 +8,17 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/styles/colors.dart';
 import '../../itinerary/widgets/itinerary-app_bar.dart';
 import '../services/navigation_api.dart';
 
 class MapNavigationScreen extends StatefulWidget {
-  const MapNavigationScreen({super.key});
+  List<LatLng> locations = [];
+  List<String> locationNames = [];
+
+  MapNavigationScreen({super.key, required this.locations, required this.locationNames});
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -55,16 +59,7 @@ class _MapScreenState extends State<MapNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCustomMarker();
     _getCurrentLocation();
-  }
-
-  Future<void> _loadCustomMarker() async {
-    userIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(60, 60)),
-      'assets/images/avt.png',
-    );
-    setState(() {});
   }
 
   Future<void> _getCurrentLocation() async {
@@ -151,7 +146,7 @@ class _MapScreenState extends State<MapNavigationScreen> {
         userMarker = Marker(
           markerId: const MarkerId("user_location"),
           position: newPosition,
-          icon: userIcon ?? BitmapDescriptor.defaultMarker,
+          icon: BitmapDescriptor.defaultMarker,
           infoWindow: const InfoWindow(title: "Vị trí của bạn"),
         );
       });
@@ -242,8 +237,8 @@ class _MapScreenState extends State<MapNavigationScreen> {
     List<int> compressedBytes = await FlutterImageCompress.compressWithFile(
           imageFile.absolute.path,
           quality: 50,
-          minWidth: 200,
-          minHeight: 200,
+          minWidth: 400,
+          minHeight: 400,
         ) ??
         [];
 
@@ -325,6 +320,25 @@ class _MapScreenState extends State<MapNavigationScreen> {
                 myLocationEnabled: true,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: true,
+              ),
+              Positioned(
+                bottom: 150,
+                right: 7,
+                child: GestureDetector(
+                  onTap: () async {
+                    const phoneNumber = "tel:0914017875";
+                    if (await canLaunchUrl(Uri.parse(phoneNumber))) {
+                      await launchUrl(Uri.parse(phoneNumber));
+                    } else {
+                      print("Không thể gọi điện");
+                    }
+                  },
+                  child: Image.asset(
+                    'assets/images/sos.png',
+                    width: 45,
+                    height: 45,
+                  ),
+                ),
               ),
               Positioned(
                 bottom: 100,
@@ -431,10 +445,10 @@ class _MapScreenState extends State<MapNavigationScreen> {
                           icon: const Icon(Icons.camera_alt_rounded,
                               color: Colors.white, size: 18),
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
+                            backgroundColor: WidgetStateProperty.all(
                                 AppColors.orangeColor),
                             minimumSize:
-                                MaterialStateProperty.all(const Size(36, 36)),
+                                WidgetStateProperty.all(const Size(36, 36)),
                           ),
                         ),
                       ],

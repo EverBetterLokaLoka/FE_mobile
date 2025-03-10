@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -67,11 +68,13 @@ class AuthService {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         String? token = responseData["token"];
-        if (token == null) throw Exception("Token is null");
+
+        if (token == null) {
+          throw Exception("Token is null. Please try again.");
+        }
 
         saveToken(token);
-        showCustomNotice(
-            context, 'Your account has been created successfully.', 'confirm');
+        showCustomNotice(context, 'Your account has been created successfully.', 'confirm');
 
         Navigator.push(
           context,
@@ -79,28 +82,26 @@ class AuthService {
         );
       } else {
         final responseData = jsonDecode(response.body);
-        print(
-            'An error occurred while processing your registration. Please try again later. ${responseData["message"]}');
-        showCustomNotice(
-            context,
-            "An error occurred while processing your registration. Please try again later.",
-            "notice");
+        String errorMessage = responseData["message"] ?? "An unknown error occurred.";
 
         if (response.statusCode == 409) {
-          showCustomNotice(
-              context,
-              "This email is already in use. Please use a different email or log in.",
-              "confirm");
+          errorMessage = "This email is already in use. Please use a different email or log in.";
         }
+
+        showCustomNotice(context, errorMessage, "notice");
       }
+    } on SocketException {
+      showCustomNotice(context, "No internet connection. Please turn on Wi-Fi or mobile data.", "error");
+    } on FormatException {
+      showCustomNotice(context, "Server returned an invalid response. Please try again later.", "error");
     } catch (e) {
-      showCustomNotice(context, e.toString(), 'notice');
+      showCustomNotice(context, "An unexpected error occurred: $e", "error");
     } finally {
       onFinish();
     }
   }
 
-  Future<UserNormal?> signIn(
+  Future<dynamic> signIn(
       String email, String password, String currentPath) async {
     try {
       final response = await _apiService.request(
@@ -114,9 +115,13 @@ class AuthService {
         },
       );
 
-      final Map<String, dynamic> responseData = jsonDecode(response.body);
-      String? token = responseData["token"];
+      if (response.body.isEmpty) {
+        return null;
+      }
 
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      String? token = responseData["token"];
       if (token == null) {
         print("Token is null");
         return null;
@@ -127,10 +132,14 @@ class AuthService {
       if (responseData.containsKey('data')) {
         return UserNormal.fromJson(responseData['data']);
       }
+      return null;
+    } on SocketException catch (_) {
+      return "NO_INTERNET";
+    } on FormatException catch (_) {
+      return "INVALID_RESPONSE";
     } catch (e) {
-      print("Sign-In Error: $e");
+      return null;
     }
-    return null;
   }
 
   Future<void> saveToken(String token) async {

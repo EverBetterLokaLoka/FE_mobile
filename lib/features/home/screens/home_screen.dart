@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../../globals.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../auth/services/auth_services.dart';
+import '../../navigation/services/navigation_api.dart';
+import '../../weather/services/LocationService.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,12 +18,104 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  LatLng? currentLocation;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AuthService().checkTokenAndProceed(context);
     });
+    _initializeLocation();
+    getCity();
+  }
+
+  void getCity() async {
+    String? city = await LocationService.getCurrentCity();
+    if (city != null) {
+      cityName = city;
+      print("Thành phố hiện tại: $city");
+    } else {
+      print("Không thể lấy thành phố.");
+    }
+  }
+
+  Future<void> _initializeLocation() async {
+    await NavigationApi().getCurrentLocation();
+    _checkPermissions();
+    setState(() {});
+  }
+
+  Future<void> _checkPermissions() async {
+    PermissionStatus locationStatus = await Permission.location.status;
+    PermissionStatus cameraStatus = await Permission.camera.status;
+
+    if (locationStatus.isDenied || cameraStatus.isDenied) {
+      _requestPermissions();
+    } else if (locationStatus.isPermanentlyDenied ||
+        cameraStatus.isPermanentlyDenied) {
+      _showSettingsDialog();
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.camera,
+    ].request();
+
+    if (statuses[Permission.location]!.isDenied ||
+        statuses[Permission.camera]!.isDenied) {
+      _showPermissionDeniedDialog();
+    }
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Request permission"),
+        content: Text(
+            "The app needs location and camera permissions to work. Please grant permissions to continue."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _requestPermissions();
+            },
+            child: Text("Try again"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Access denied"),
+        content: Text(
+            "You have permanently denied permission. Go to settings to grant permission."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              openAppSettings();
+              Navigator.of(context).pop();
+            },
+            child: Text("Open setting"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Close"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
