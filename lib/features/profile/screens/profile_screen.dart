@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lokaloka/features/auth/services/auth_services.dart';
 import 'package:lokaloka/features/auth/models/user.dart';
 import 'package:lokaloka/features/profile/services/profile_services.dart';
+import 'package:lokaloka/globals.dart';
 import 'profile_header.dart';
 import 'account_tab.dart';
 import 'home_tab.dart';
@@ -45,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       if (response != null) {
         setState(() {
           user = response;
+          trustPhone = user?.emergency_numbers;
           isLoading = false;
         });
       } else {

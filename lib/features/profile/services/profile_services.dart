@@ -8,6 +8,7 @@ import 'package:lokaloka/features/auth/services/auth_services.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:lokaloka/features/profile/models/post_modal.dart';
 import 'package:lokaloka/core/constants/url_constant.dart';
+import 'package:lokaloka/globals.dart';
 
 class ProfileService {
   String baseUrl = ApiService().baseUrl;
@@ -25,7 +26,7 @@ class ProfileService {
         throw Exception("Token doesn't contain user ID!");
       }
       String userId = decodedToken['id'].toString();
-
+      print(userId);
       final response = await http.get(
         Uri.parse('$baseUrl/user/$userId'),
         headers: {
@@ -80,6 +81,7 @@ class ProfileService {
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
+        trustPhone = user.emergency_numbers!;
         return true;
       } else {
         throw Exception('Failed to update profile: ${response.statusCode}');

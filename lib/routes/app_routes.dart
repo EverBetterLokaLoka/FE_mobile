@@ -9,6 +9,7 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/itinerary/screens/create_itinerary_screen.dart';
 import '../features/navigation/screens/map_screen.dart';
+import '../features/weather/screens/weather_screen.dart';
 
 final router = RoutesConstant();
 
@@ -35,6 +36,11 @@ class AppRoutes {
         return MaterialPageRoute(
             builder: (_) => CreateItinerary(), settings: settings);
       case '/profile':
+      return MaterialPageRoute(builder: (_) => ProfileScreen());
+      // return MaterialPageRoute(builder: (_) => ProfileScreen(), settings: settings);
+      case '/weather':
+        return MaterialPageRoute(
+            builder: (_) => WeatherScreen(), settings: settings);
         return MaterialPageRoute(builder: (_) => ProfileScreen());
       case '/moment':
         return MaterialPageRoute(builder: (_) => MomentsScreen());

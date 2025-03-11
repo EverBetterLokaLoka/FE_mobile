@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lokaloka/features/itinerary/models/Itinerary.dart';
 import 'package:lokaloka/features/itinerary/screens/detail_itinerary_screen.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../../widgets/notice_widget.dart';
 import '../../navigation/screens/map_navigation_screen.dart';
+import '../../weather/services/LocationService.dart';
 import '../services/itinerary_api.dart';
 
 class MyTrip extends StatefulWidget {
@@ -20,11 +22,34 @@ class _MyTripState extends State<MyTrip> {
   List<Map<String, dynamic>> filteredItineraries = [];
   bool isLoading = true;
   int selectedTab = 0;
+  List<String> locationNames = [];
+  List<LatLng> locations = [];
 
   @override
   void initState() {
     super.initState();
     _fetchItineraries();
+    _fetchLocations();
+  }
+
+  Future<void> _fetchLocations() async {
+    List<LatLng> fetchedLocations =
+        await LocationService.getCoordinatesForLocations(locationNames);
+    setState(() {
+      locations = fetchedLocations;
+    });
+  }
+
+  Future<void> spilitLocations(Itinerary itinerary) async {
+    List<String> locationNames =
+        itinerary.locations.map((loc) => loc.name).toList();
+
+    List<LatLng> fetchedLocations =
+        await LocationService.getCoordinatesForLocations(locationNames);
+
+    setState(() {
+      locations = fetchedLocations;
+    });
   }
 
   Future<void> _fetchItineraries() async {
@@ -327,10 +352,17 @@ class _MyTripState extends State<MyTrip> {
                     ),
                     ElevatedButton(
                       onPressed: () => {
+                        // splittLocation(Itinerary.fromJson(trip))
+                        // getById(trip.id!)
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MapNavigationScreen()))
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MapNavigationScreen(
+                              locations: [],
+                              locationNames: [],
+                            ),
+                          ),
+                        )
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(35, 23),
