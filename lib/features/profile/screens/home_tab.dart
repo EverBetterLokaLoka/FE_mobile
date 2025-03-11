@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lokaloka/core/constants/url_constant.dart';
 import 'package:lokaloka/features/auth/services/auth_services.dart';
+import 'package:lokaloka/features/moments/screens/create_moment_screen.dart';
+import 'package:lokaloka/features/moments/screens/edit_post.dart';
 import 'package:lokaloka/features/profile/models/post_modal.dart';
 import 'package:lokaloka/features/profile/services/profile_services.dart';
 import 'package:lokaloka/features/profile/screens/comment_screen.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 class HomeTab extends StatefulWidget {
   @override
@@ -13,14 +19,33 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final ProfileService _profileService = ProfileService();
+  final AuthService _authService = AuthService();
   late Future<List<Post>> _postsFuture;
-  List<Post> _posts = []; // Store posts locally
+  List<Post> _posts = [];
   bool _isRefreshing = false;
+  int? _currentUserId;
+  Set<int> _loadingLikes = {};
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    _getCurrentUserId();
     _loadPosts();
+  }
+
+  Future<void> _getCurrentUserId() async {
+    try {
+      String? token = await _authService.getToken();
+      if (token != null) {
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+        setState(() {
+          _currentUserId = int.tryParse(decodedToken['id'].toString());
+        });
+      }
+    } catch (e) {
+      print('Error getting current user ID: $e');
+    }
   }
 
   Future<void> _loadPosts() async {
@@ -31,15 +56,6 @@ class _HomeTabState extends State<HomeTab> {
 
     try {
       final posts = await _postsFuture;
-
-      // Debug: Print post details
-      for (var post in posts) {
-        print('Post ID: ${post.id}, Comments: ${post.comments.length}');
-        for (var comment in post.comments) {
-          print('  Comment: ${comment.content}');
-        }
-      }
-
       setState(() {
         _posts = posts;
         _isRefreshing = false;
@@ -57,15 +73,56 @@ class _HomeTabState extends State<HomeTab> {
     return Future.value();
   }
 
-  // Handle new comment added
-  void _handleCommentAdded(Post post, Comment newComment) {
-    print('Comment added callback: Post ID: ${post.id}, Comment: ${newComment.content}');
+  Future<void> _handleLikePress(Post post) async {
+    if (_currentUserId == null || _loadingLikes.contains(post.id)) {
+      return;
+    }
 
     setState(() {
-      // Find the post in our list and update it
+      _loadingLikes.add(post.id);
+    });
+
+    try {
+      final updatedPost = await _profileService.toggleLike(post.id);
+      setState(() {
+        final index = _posts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _posts[index] = updatedPost;
+        }
+      });
+    } catch (e) {
+      print('Error toggling like: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update like status')),
+      );
+    } finally {
+      setState(() {
+        _loadingLikes.remove(post.id);
+      });
+    }
+  }
+
+  Future<void> _handleDeletePost(int postId) async {
+    try {
+      await _profileService.deletePost(postId);
+      setState(() {
+        _posts.removeWhere((post) => post.id == postId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Post deleted successfully')),
+      );
+    } catch (e) {
+      print('Failed to delete post: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete post')),
+      );
+    }
+  }
+
+  void _handleCommentAdded(Post post, Comment newComment) {
+    setState(() {
       final index = _posts.indexWhere((p) => p.id == post.id);
       if (index != -1) {
-        // Create a new post object with updated comment count and comments list
         final updatedPost = Post(
           id: post.id,
           title: post.title,
@@ -76,78 +133,128 @@ class _HomeTabState extends State<HomeTab> {
           createdAt: post.createdAt,
           updatedAt: post.updatedAt,
           avatar: post.avatar,
-          comments: [...post.comments, newComment], // Add the new comment
+          comments: [...post.comments, newComment],
           likes: post.likes,
           images: post.images,
           likeCount: post.likeCount,
-          commentCount: post.commentCount + 1, // Increment comment count
+          commentCount: post.commentCount + 1,
           destroyed: post.destroyed,
         );
-
-        // Update the post in our list
         _posts[index] = updatedPost;
-
-        // Debug: Verify the update
-        print('Updated post: ID: ${_posts[index].id}, Comments: ${_posts[index].comments.length}');
-        for (var comment in _posts[index].comments) {
-          print('  Comment: ${comment.content}');
-        }
       }
     });
   }
 
+  void _handleEditPost(Post post) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPostScreen(
+          post: post,
+          onUpdate: (updatedPost) {
+            setState(() {
+              final index = _posts.indexWhere((p) => p.id == post.id);
+              if (index != -1) {
+                _posts[index] = updatedPost;
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openImageGallery(List<PostImage> images, int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhotoViewGallery.builder(
+          itemCount: images.length,
+          builder: (context, index) {
+            return PhotoViewGalleryPageOptions(
+              imageProvider: NetworkImage(images[index].content),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 2,
+              heroAttributes: PhotoViewHeroAttributes(tag: images[index].content), // Đảm bảo có hero animation
+            );
+          },
+          scrollPhysics: BouncingScrollPhysics(),
+          backgroundDecoration: BoxDecoration(color: Colors.black),
+          pageController: PageController(initialPage: initialIndex),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: _refreshPosts,
-          child: _posts.isEmpty && !_isRefreshing
-              ? FutureBuilder<List<Post>>(
-            future: _postsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: ${snapshot.error}'),
-                      SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _refreshPosts,
-                        child: Text('Retry'),
-                      ),
-                    ],
-                  ),
-                );
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No posts available'));
-              }
+    return Scaffold(
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _refreshPosts,
+            child: _posts.isEmpty && !_isRefreshing
+                ? FutureBuilder<List<Post>>(
+              future: _postsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: ${snapshot.error}'),
+                        SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _refreshPosts,
+                          child: Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No posts available'));
+                }
 
-              // If we have data from the future but not in _posts, update _posts
-              if (_posts.isEmpty && snapshot.data != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  setState(() {
-                    _posts = snapshot.data!;
+                if (_posts.isEmpty && snapshot.data != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _posts = snapshot.data!;
+                    });
                   });
-                });
-              }
+                }
 
-              return _buildPostsList(snapshot.data!);
-            },
-          )
-              : _buildPostsList(_posts),
-        ),
-        if (_isRefreshing && _posts.isNotEmpty)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(),
+                return _buildPostsList(snapshot.data!);
+              },
+            )
+                : _buildPostsList(_posts),
           ),
-      ],
+          if (_isRefreshing && _posts.isNotEmpty)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(),
+            ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Chuyển đến màn hình tạo bài viết
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateMomentScreen(
+                userName: "Tên người dùng",  // Thay thế bằng tên người dùng thực tế
+                userLocation: "Địa điểm người dùng",  // Thay thế bằng địa điểm người dùng thực tế
+                userAvatar: "URL avatar người dùng",  // URL thực tế của avatar người dùng
+              ),
+            ),
+          );
+        },
+        child: Icon(Icons.add),
+      ),
     );
   }
 
@@ -166,20 +273,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildPostCard(Post post) {
-    DateTime postDate;
-    try {
-      postDate = DateTime.parse(post.createdAt);
-    } catch (e) {
-      postDate = DateTime.now(); // Fallback if date parsing fails
-    }
-
+    DateTime postDate = DateTime.tryParse(post.createdAt) ?? DateTime.now();
     final String formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(postDate);
 
-    // Get the first letter of email or use a default
-    final String avatarText = post.userEmail.isNotEmpty
-        ? post.userEmail[0].toUpperCase()
-        : '?';
-
+    bool isLiked = post.likes.any((like) => like.userId == _currentUserId);
 
     return Card(
       margin: EdgeInsets.only(bottom: 10),
@@ -190,51 +287,121 @@ class _HomeTabState extends State<HomeTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(post.avatar),
-                  backgroundColor: Colors.blue,
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(post.avatar),
+                      backgroundColor: Colors.blue,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      post.userName,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-
-                SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.userName ?? 'Loading...',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        formattedDate,
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
+                if (post.userId == _currentUserId)
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert),
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        const PopupMenuItem<String>(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ];
+                    },
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _handleDeletePost(post.id);
+                      } else if (value == 'edit') {
+                        _handleEditPost(post);
+                      }
+                    },
                   ),
-                ),
               ],
             ),
             SizedBox(height: 10),
-
+            Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12)),
             if (post.title.isNotEmpty)
               Text(
                 post.title,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-
             if (post.content.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(post.content),
               ),
-
             if (post.images.isNotEmpty) _buildImageGrid(post.images),
-
             Divider(height: 20),
-
-            _buildPostActions(post),
-
-            // Show the most recent comment if available
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: _loadingLikes.contains(post.id)
+                          ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                          : Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? Colors.red : null,
+                      ),
+                      onPressed: () => _handleLikePress(post),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                    ),
+                    SizedBox(width: 5),
+                    Text('${post.likeCount}'),
+                  ],
+                ),
+                InkWell(
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommentScreen(
+                          post: post,
+                          onCommentAdded: (newComment) => _handleCommentAdded(post, newComment),
+                        ),
+                      ),
+                    );
+                    _refreshPosts();
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.comment),
+                      SizedBox(width: 5),
+                      Text('${post.commentCount}'),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.share),
+                      onPressed: () {
+                        // Implement share functionality
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                    ),
+                    SizedBox(width: 5),
+                    Text('0'),
+                  ],
+                ),
+              ],
+            ),
             if (post.comments.isNotEmpty) _buildLatestComment(post.comments.last),
           ],
         ),
@@ -242,10 +409,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // Add this method to show the latest comment
   Widget _buildLatestComment(Comment comment) {
-    final String username = comment.userName;
-
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Container(
@@ -269,7 +433,7 @@ class _HomeTabState extends State<HomeTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$username: ',
+                  '${comment.userName}: ',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 Expanded(
@@ -287,26 +451,30 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildImageGrid(List<PostImage> images) {
-    // Same as before
     if (images.isEmpty) return SizedBox();
 
     if (images.length == 1) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            images[0].content,
-            fit: BoxFit.cover,
-            height: 200,
-            width: double.infinity,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                height: 200,
-                color: Colors.grey[300],
-                child: Center(child: Icon(Icons.image_not_supported)),
-              );
-            },
+      return GestureDetector(
+        onTap: () {
+          _openImageGallery(images, 0);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              images[0].content,
+              fit: BoxFit.cover,
+              height: 200,
+              width: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Center(child: Icon(Icons.image_not_supported)),
+                );
+              },
+            ),
           ),
         ),
       );
@@ -327,103 +495,49 @@ class _HomeTabState extends State<HomeTab> {
         itemBuilder: (context, index) {
           bool showOverlay = images.length > 6 && index == 5;
 
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  images[index].content,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: Center(child: Icon(Icons.image_not_supported)),
-                    );
-                  },
-                ),
-              ),
-              if (showOverlay)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(8),
+          return GestureDetector(
+            onTap: () {
+              _openImageGallery(images, index);
+            },
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    images[index].content,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: Center(child: Icon(Icons.image_not_supported)),
+                      );
+                    },
                   ),
-                  child: Center(
-                    child: Text(
-                      '+${images.length - 5}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                ),
+                if (showOverlay)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '+${images.length - 5}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildPostActions(Post post) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.favorite_border),
-              onPressed: () {
-                // Implement like functionality
-              },
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
-            ),
-            SizedBox(width: 5),
-            Text('${post.likeCount}'),
-          ],
-        ),
-        InkWell(
-          onTap: () async {
-            // Navigate to comment screen and wait for result
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CommentScreen(
-                  post: post,
-                  onCommentAdded: (newComment) => _handleCommentAdded(post, newComment),
-                ),
-              ),
-            );
-
-            // Force refresh posts when returning from comment screen
-            _refreshPosts();
-          },
-          child: Row(
-            children: [
-              Icon(Icons.comment),
-              SizedBox(width: 5),
-              Text('${post.commentCount}'),
-            ],
-          ),
-        ),
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.share),
-              onPressed: () {
-                // Implement share functionality
-              },
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
-            ),
-            SizedBox(width: 5),
-            Text('0'),
-          ],
-        ),
-      ],
-    );
-  }
 }

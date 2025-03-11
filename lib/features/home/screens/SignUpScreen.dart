@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SignUpScreen extends StatelessWidget {
   @override
@@ -48,7 +48,7 @@ class SignUpScreen extends StatelessWidget {
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () {},
-              icon: const FaIcon(FontAwesomeIcons.google, color: Colors.red),
+              // icon: const FaIcon(FontAwesomeIcons.google, color: Colors.red),
               label: const Text('Sign up with Google'),
               style: OutlinedButton.styleFrom(
                 minimumSize: Size(double.infinity, 50),
