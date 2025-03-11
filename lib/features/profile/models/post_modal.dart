@@ -33,6 +33,42 @@ class Post {
     required this.destroyed,
   });
 
+  Post copyWith({
+    int? id,
+    String? title,
+    String? content,
+    int? userId,
+    String? userEmail,
+    String? userName,
+    String? createdAt,
+    String? updatedAt,
+    String? avatar,
+    List<Comment>? comments,
+    List<Like>? likes,
+    List<PostImage>? images,
+    int? likeCount,
+    int? commentCount,
+    bool? destroyed,
+  }) {
+    return Post(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      userId: userId ?? this.userId,
+      userEmail: userEmail ?? this.userEmail,
+      userName: userName ?? this.userName,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      avatar: avatar ?? this.avatar,
+      comments: comments ?? this.comments,
+      likes: likes ?? this.likes,
+      images: images ?? this.images,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      destroyed: destroyed ?? this.destroyed,
+    );
+  }
+
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['id'] ?? 0,
@@ -44,19 +80,33 @@ class Post {
       createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
       updatedAt: json['updatedAt'],
       avatar: json['avatar'] ?? '',
-      comments: (json['comments'] as List<dynamic>?)
-          ?.map((comment) => Comment.fromJson(comment))
-          .toList() ?? [],
-      likes: (json['likes'] as List<dynamic>?)
-          ?.map((like) => Like.fromJson(like))
-          .toList() ?? [],
-      images: (json['images'] as List<dynamic>?)
-          ?.map((image) => PostImage.fromJson(image))
-          .toList() ?? [],
+      comments: (json['comments'] as List<dynamic>?)?.map((comment) => Comment.fromJson(comment)).toList() ?? [],
+      likes: (json['likes'] as List<dynamic>?)?.map((like) => Like.fromJson(like)).toList() ?? [],
+      images: (json['images'] as List<dynamic>?)?.map((image) => PostImage.fromJson(image)).toList() ?? [],
       likeCount: json['likeCount'] ?? 0,
       commentCount: json['commentCount'] ?? 0,
       destroyed: json['destroyed'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'content': content,
+      'userId': userId,
+      'userEmail': userEmail,
+      'userName': userName,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      'avatar': avatar,
+      'comments': comments.map((c) => c.toJson()).toList(),
+      'likes': likes.map((l) => l.toJson()).toList(),
+      'images': images.map((i) => i.toJson()).toList(),
+      'likeCount': likeCount,
+      'commentCount': commentCount,
+      'destroyed': destroyed,
+    };
   }
 }
 
@@ -99,6 +149,20 @@ class Comment {
       avatar: json['avatar']?? ''
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'content': content,
+      'postId': postId,
+      'userId': userId,
+      'userEmail': userEmail,
+      'userName': userName,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      'destroyed': destroyed,
+      'avatar': avatar,
+    };
+  }
 }
 
 class Like {
@@ -106,7 +170,7 @@ class Like {
   final int postId;
   final int userId;
   final String userEmail;
-  final String createdAt;
+  final DateTime createdAt;
 
   Like({
     required this.id,
@@ -121,11 +185,24 @@ class Like {
       id: json['id'] ?? 0,
       postId: json['postId'] ?? 0,
       userId: json['userId'] ?? 0,
-      userEmail: json['userEmail'] ?? '',
-      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
+      userEmail: json['userEmail'] ?? 'unknown@example.com',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt']) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'postId': postId,
+      'userId': userId,
+      'userEmail': userEmail,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }
+
 
 class PostImage {
   final int id;
@@ -171,5 +248,12 @@ class PostImage {
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'content': content,
+    };
   }
 }
