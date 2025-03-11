@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../globals.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../auth/services/auth_services.dart';
@@ -283,7 +284,18 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => Column(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pushNamed(context, navigate),
+            onTap: () async {
+              if (navigate == "/sos") {
+                final phoneNumber = "tel:$trustPhone";
+                if (await canLaunchUrl(Uri.parse(phoneNumber))) {
+                  await launchUrl(Uri.parse(phoneNumber));
+                } else {
+                  print("Không thể gọi điện");
+                }
+              } else {
+                Navigator.pushNamed(context, navigate);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(

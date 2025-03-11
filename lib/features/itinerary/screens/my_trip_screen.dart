@@ -56,6 +56,7 @@ class _MyTripState extends State<MyTrip> {
     setState(() => isLoading = true);
 
     final itineraries = await _itineraryService.fetchItineraries();
+    print("get 1231231232312312312312312312312123123123");
     setState(() {
       allItineraries = itineraries;
       _filterItineraries();

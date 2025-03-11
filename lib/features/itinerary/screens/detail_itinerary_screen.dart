@@ -30,7 +30,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
     if (widget.itineraryItems.locations.isEmpty) {
       return Scaffold(
         appBar: ItineraryAppBar(
-          titleText: 'Create Itinerary',
+          titleText: 'Detail Itinerary',
         ),
         body: const Center(
           child: Text(
@@ -44,6 +44,9 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
         .where((location) => location.day == selectedDay)
         .toList();
 
+    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.first.day}");
+    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.last.day}");
+    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.length}");
     void handleDialog(BuildContext context) async {
 
       bool? result = await showCustomNotice(
@@ -179,7 +182,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
 
     return Scaffold(
       appBar: ItineraryAppBar(
-        titleText: 'Create Itinerary',
+        titleText: widget.itineraryItems.title!,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -13,7 +13,8 @@ class CreateByAi extends StatefulWidget {
   final String startDate;
   final String endDate;
 
-  const CreateByAi({super.key,
+  const CreateByAi({
+    super.key,
     required this.location,
     required this.totalDay,
     required this.startDate,
@@ -142,10 +143,20 @@ class _CreateByAiState extends State<CreateByAi> {
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: "Budget",
-                      hintText: "Eg: 5.000.000VND",
+                      hintText: "Eg: 5000000 VND",
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a budget';
+                      }
+                      if (!RegExp(r'^\d+$').hasMatch(value)) {
+                        return 'Only numbers are allowed';
+                      }
+                      return null;
+                    },
                   ),
                   SizedBox(height: 20),
                   Text(
