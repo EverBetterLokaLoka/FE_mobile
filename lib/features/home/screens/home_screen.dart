@@ -268,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   LucideIcons.map, "Travel Itinerary", "/navigation-map"),
               _buildExperienceItem(LucideIcons.users, "Friends", "/add-friend"),
               _buildExperienceItem(LucideIcons.shieldAlert, "SOS", "/sos"),
-              _buildExperienceItem(LucideIcons.camera, "Moment", "/checkin"),
+              _buildExperienceItem(LucideIcons.camera, "Moment", "/moment"),
               _buildExperienceItem(LucideIcons.mapPin, "Map", "/map"),
               _buildExperienceItem(LucideIcons.cloudSun, "Weather", "/weather"),
             ],

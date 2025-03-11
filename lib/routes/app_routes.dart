@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokaloka/features/moments/screens/moment_screen.dart';
 import 'package:lokaloka/features/profile/screens/profile_screen.dart';
 import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
 import 'package:lokaloka/features/itinerary/screens/my_trip_screen.dart';
@@ -40,6 +41,9 @@ class AppRoutes {
       case '/weather':
         return MaterialPageRoute(
             builder: (_) => WeatherScreen(), settings: settings);
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
+      case '/moment':
+        return MaterialPageRoute(builder: (_) => MomentsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

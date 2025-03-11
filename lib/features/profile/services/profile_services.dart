@@ -119,6 +119,59 @@ class ProfileService {
     }
   }
 
+  Future<List<Post>> fetchAllPosts() async {
+    try {
+      String? token = await AuthService().getToken();
+      if (token == null) {
+        throw Exception('Authentication token is missing. Please log in again.');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/posts/all'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.map((post) => Post.fromJson(post)).toList();
+      } else {
+        throw Exception('Failed to load posts: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error while fetching posts: $e');
+      rethrow;
+    }
+  }
+
+  Future<Post> toggleLike(int postId) async {
+    try {
+      String? token = await AuthService().getToken();
+      if (token == null) {
+        throw Exception('Authentication token is missing');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/posts/$postId/likes'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return Post.fromJson(responseData);
+      } else {
+        throw Exception('Failed to toggle like: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error toggling like: $e');
+      rethrow;
+    }
+  }
   Future<Comment> addComment(int postId, String content) async {
     try {
       String? token = await AuthService().getToken();
@@ -131,7 +184,6 @@ class ProfileService {
         throw Exception("Token doesn't contain user ID!");
       }
 
-      // Get user email for the comment (if available)
       String userEmail = '';
       try {
         final userProfile = await getUserProfile();
@@ -140,7 +192,6 @@ class ProfileService {
         }
       } catch (e) {
         print('Could not get user profile: $e');
-        // Continue without email, we'll handle empty email in the UI
       }
 
       final response = await http.post(
@@ -155,13 +206,9 @@ class ProfileService {
         }),
       ).timeout(const Duration(seconds: 30));
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
 
-        // Ensure required fields have default values if they're missing
         if (responseData['userEmail'] == null || responseData['userEmail'] == '') {
           responseData['userEmail'] = userEmail.isNotEmpty ? userEmail : 'user@example.com';
         }
@@ -172,18 +219,13 @@ class ProfileService {
           responseData['userId'] = int.tryParse(decodedToken['id'].toString()) ?? 0;
         }
 
-        // Make sure content is included
         if (responseData['content'] == null || responseData['content'] == '') {
           responseData['content'] = content;
         }
 
-        // Make sure createdAt is included
         if (responseData['createdAt'] == null || responseData['createdAt'] == '') {
           responseData['createdAt'] = DateTime.now().toIso8601String();
         }
-
-        // Debug: Print the processed response data
-        print('Processed response data: $responseData');
 
         return Comment.fromJson(responseData);
       } else if (response.statusCode == 401) {
@@ -200,7 +242,7 @@ class ProfileService {
       rethrow;
     }
   }
-  // Add this method to profile_services.dart
+
   Future<UserNormal?> getUserById(int userId) async {
     try {
       String? token = await AuthService().getToken();
@@ -229,6 +271,7 @@ class ProfileService {
       rethrow;
     }
   }
+
   Future<String> getUserName() async {
     try {
       UserNormal? user = await getUserProfile();
@@ -236,6 +279,21 @@ class ProfileService {
     } catch (e) {
       print('Error fetching user name: $e');
       return 'Unknown User';
+    }
+  }
+  Future<void> deletePost(int postId) async {
+    final String? token = await AuthService().getToken(); // Fetch the Bearer token
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/posts/$postId'), // Sửa đường dẫn nếu cần
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to delete post');
     }
   }
 }
