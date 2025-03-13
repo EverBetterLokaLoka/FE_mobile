@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:lokaloka/globals.dart';
+import 'package:translator/translator.dart';
 import '../../../core/utils/apis.dart';
 import '../services/LocationService.dart';
 import '../services/wether_api.dart';
@@ -17,11 +21,28 @@ class _WeatherScreenState extends State<WeatherScreen> {
   var imageUrl;
   int selectedForecast = 0;
 
+
+
+  TextEditingController _textEditingController = TextEditingController();
+  final TextEditingController _dayController = TextEditingController();
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
+  List<Map<String, dynamic>> vietnameseData = [];
+  final translator = GoogleTranslator();
+
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> _locations = [];
+  String? _selectedLocation;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
     fetchWeather(cityName);
     setState(() {});
+    _fetchLocations();
   }
 
   void fetchWeather(String city) async {
@@ -72,9 +93,38 @@ class _WeatherScreenState extends State<WeatherScreen> {
       builder: (context) {
         return AlertDialog(
           title: Text("Enter city name"),
-          content: TextField(
-            controller: cityController,
-            decoration: InputDecoration(hintText: "Ex: Da Nang"),
+          content:
+
+          TypeAheadField<Map<String, String>>(
+            suggestionsCallback: (search) async {
+              return _filterLocations(search);
+            },
+            builder: (context, controller, focusNode) {
+              return TextFormField(
+                controller: cityController,
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  labelText: 'Where to?',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                validator: (value) {
+                  if (_selectedLocation == null) {
+                    return 'Please select a destination';
+                  }
+                  return null;
+                },
+              );
+            },
+            itemBuilder: (context, location) {
+              return ListTile(
+                title: Text(location['name'] ?? 'Unknown'),
+              );
+            },
+            onSelected: (location) {
+              _textEditingController.text = location['name']!;
+              _selectedLocation = location['name']!;
+            },
           ),
           actions: [
             TextButton(
@@ -113,6 +163,58 @@ class _WeatherScreenState extends State<WeatherScreen> {
     } else {
       print("Không thể lấy thành phố.");
     }
+  }
+
+  Future<void> translateData(List<Map<String, dynamic>> vietnameseData) async {
+    final translator = GoogleTranslator();
+
+    await Future.wait(vietnameseData.map((item) async {
+      var translatedName =
+      await translator.translate(item['name'], from: 'vi', to: 'en');
+      item['name'] = translatedName.text;
+    }));
+  }
+
+  Future<void> _fetchLocations() async {
+    try {
+      final response = await _apiService.request(
+          path: '', method: 'GET', typeUrl: 'locationUrl', currentPath: '');
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        vietnameseData = List<Map<String, dynamic>>.from(data);
+        await translateData(vietnameseData);
+
+        setState(() {
+          _locations = data
+              .map((item) => {'id': item['id'], 'name': item['name']})
+              .toList();
+          setState(() {
+            _isLoading = false;
+          });
+        });
+      } else {
+        throw Exception('Failed to load locations');
+      }
+    } catch (e) {
+      print('Error fetching locations: $e');
+      setState(() {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+  }
+
+  List<Map<String, String>> _filterLocations(String query) {
+    return _locations
+        .where((location) => (location['name']?.toString().toLowerCase() ?? '')
+        .contains(query.toLowerCase()))
+        .map((location) => {
+      'id': location['id'].toString(),
+      'name': location['name'].toString(),
+    })
+        .toList();
   }
 
   @override
@@ -175,7 +277,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           ),
         ),
         Positioned(
-          bottom: 60, // Dời lên một chút để có chỗ cho button
+          bottom: 60,
           left: 0,
           right: 0,
           child: Column(
@@ -185,7 +287,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white)),
-              Text("${weatherData!['list'][0]['main']['temp']}°",
+              Text("${(weatherData!['list'][0]['main']['temp'] as num).ceil()}°",
                   style: TextStyle(
                       fontSize: 64,
                       fontWeight: FontWeight.bold,

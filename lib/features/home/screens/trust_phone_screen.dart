@@ -84,7 +84,8 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
         ),
       );
 
-      Navigator.pushNamed(context, '/home');
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/home', (Route<dynamic> route) => false);
     } else {
       showCustomNotification(
         context: context,
@@ -117,7 +118,6 @@ class _TrustPhoneScreenState extends State<TrustPhoneScreen> {
 
     Overlay.of(context).insert(entry);
 
-    // Xóa thông báo sau khoảng thời gian
     Future.delayed(duration, () {
       entry?.remove();
     });

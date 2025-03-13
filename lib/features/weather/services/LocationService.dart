@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -54,24 +57,34 @@ class LocationService {
     return null;
   }
 
-  static Future<List<LatLng>> getCoordinatesForLocations(
-      List<String> addresses) async {
-    List<LatLng> locations = [];
+  static const String apiKey = "Yg9F1M4zefVwffqyQz-d7SuRYZnDwhyUgbCoOkEwf_8";
 
-    for (String address in addresses) {
-      try {
-        List<Location> locationResults = await locationFromAddress(address);
-        if (locationResults.isNotEmpty) {
-          Location location = locationResults.first;
-          locations.add(LatLng(location.latitude, location.longitude));
-        } else {
-          print("Không tìm thấy tọa độ cho địa điểm: $address");
+  static Future<List<LatLng>> getCoordinatesFromAddresses(List<String> places, String city) async {
+    List<LatLng> coordinates = [];
+
+    for (String place in places) {
+      final String query = "$place, $city, Viet Nam";
+      final url = Uri.parse("https://geocode.search.hereapi.com/v1/geocode?q=${Uri.encodeComponent(query)}&apiKey=$apiKey");
+
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['items'].isNotEmpty) {
+          double lat = data['items'][0]['position']['lat'];
+          double lon = data['items'][0]['position']['lng'];
+          coordinates.add(LatLng(lat, lon));
         }
-      } catch (e) {
-        print("Lỗi lấy tọa độ cho $address: $e");
       }
     }
 
-    return locations;
+    return coordinates;
+  }
+
+  Future<String> getAddressesFromItinerary(
+      Map<String, dynamic> jsonData) async {
+    if (jsonData.containsKey("address")) {
+      return jsonData["address"] as String;
+    }
+    return "";
   }
 }

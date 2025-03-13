@@ -16,10 +16,12 @@ import '../../itinerary/widgets/itinerary-app_bar.dart';
 import '../services/navigation_api.dart';
 
 class MapNavigationScreen extends StatefulWidget {
+  String? title = "";
   List<LatLng> locations = [];
   List<String> locationNames = [];
 
-  MapNavigationScreen({super.key, required this.locations, required this.locationNames});
+  MapNavigationScreen(
+      {super.key, required this.title, required this.locations, required this.locationNames});
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -43,24 +45,15 @@ class _MapScreenState extends State<MapNavigationScreen> {
   File? imageFile;
   int? _selectedIndex;
   Marker? newMarker;
-
-  List<LatLng> locations = [
-    LatLng(16.0651, 108.2465),
-    LatLng(16.0603, 108.2232),
-    LatLng(16.0682, 108.2242),
-    LatLng(16.0612, 108.2296)
-  ];
-  List<String> locationNames = [
-    "Cầu Rồng",
-    "Bãi biển Mỹ Khê",
-    "Chợ Hàn",
-    "Bảo tàng Chăm"
-  ];
+  List<LatLng> locations = [];
+  List<String> locationNames = [];
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    locations = widget.locations;
+    locationNames = widget.locationNames;
   }
 
   Future<void> _getCurrentLocation() async {
@@ -198,10 +191,12 @@ class _MapScreenState extends State<MapNavigationScreen> {
 
     if (image != null) {
       setState(() {
-        imageFile = File('path/to/image');
+        imageFile = File('assets/capture');
         _locationImages[locations[index].toString()] = imageFile;
         imageFile = File(image.path);
         print("Ảnh đã lưu cho vị trí ${locations[index]}: ${imageFile?.path}");
+        print("imageFile$imageFile");
+        print("_locationImages${_locationImages[locations[index].toString()]}");
         _updateMarkerWithImage(_selectedIndex!, imageFile!);
       });
     }
@@ -231,6 +226,7 @@ class _MapScreenState extends State<MapNavigationScreen> {
 
     if (shouldCapture == true) {
       await _captureImage(index);
+      setState(() {});
     }
   }
 
@@ -259,12 +255,18 @@ class _MapScreenState extends State<MapNavigationScreen> {
       );
 
       setState(() {
+        markers
+            .removeWhere((m) => m.markerId.value == newMarker!.markerId.value);
         markers.add(newMarker!);
       });
+
+      print("Danh sách markers sau khi cập nhật: $markers");
+
       print("Đã cập nhật marker có ảnh cho vị trí ${locations[index]}.");
     } else {
       print("Lỗi khi nén ảnh!");
     }
+    setState(() {});
   }
 
   @override
@@ -277,187 +279,215 @@ class _MapScreenState extends State<MapNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ItineraryAppBar(
-        titleText: 'Navigation Map',
+        titleText: widget.title ?? "Navigation Map",
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            flex: 7,
-            child: Stack(children: [
-              GoogleMap(
-                onMapCreated: (controller) {
-                  mapController = controller;
-                  _setMapBounds();
-                },
-                mapType: MapType.terrain,
-                initialCameraPosition: CameraPosition(
-                  target: locations[0],
-                  zoom: 12,
-                ),
-                markers: {
-                  if (userMarker != null) userMarker!,
-                  ...markers,
-                  ...locations.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    LatLng position = entry.value;
-                    return Marker(
-                      markerId: MarkerId(position.toString()),
-                      position: position,
-                      infoWindow: InfoWindow(
-                        title: locationNames[index],
-                        snippet:
-                            "Vĩ độ: ${position.latitude}, Kinh độ: ${position.longitude}",
-                      ),
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                        // _askCapture(index);
-                      },
-                    );
-                  }).toSet(),
-                },
-                polylines: polylines,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: true,
-              ),
-              Positioned(
-                bottom: 150,
-                right: 7,
-                child: GestureDetector(
-                  onTap: () async {
-                    final phoneNumber = "tel:$trustPhone";
-                    if (await canLaunchUrl(Uri.parse(phoneNumber))) {
-                      await launchUrl(Uri.parse(phoneNumber));
-                    } else {
-                      print("Không thể gọi điện");
-                    }
-                  },
-                  child: Image.asset(
-                    'assets/images/sos.png',
-                    width: 45,
-                    height: 45,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 100,
-                right: 7,
-                child: FloatingActionButton(
-                  backgroundColor: Colors.white,
-                  mini: true,
-                  onPressed: () {
-                    mapController?.animateCamera(
-                      CameraUpdate.newLatLngZoom(currentLocation!, 18),
-                    );
-                  },
-                  child: Icon(Icons.my_location, color: Colors.blue),
-                ),
-              ),
-            ]),
-          ),
-          Expanded(
-            flex: 3,
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+          Column(
+            children: [
+              Expanded(
+                flex: 7,
+                child: Stack(
                   children: [
-                    Container(
-                      width: 120,
-                      height: 3,
-                      color: Colors.black,
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _instructions.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            leading: const Icon(Icons.directions),
-                            title: Text(
-                              index == currentStep
-                                  ? "**${_instructions[index]}** (Going...)"
-                                  : _instructions[index],
-                              style: TextStyle(
-                                fontWeight: index == currentStep
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
+                    GoogleMap(
+                      onMapCreated: (controller) {
+                        mapController = controller;
+                        _setMapBounds();
+                      },
+                      mapType: MapType.terrain,
+                      initialCameraPosition: CameraPosition(
+                        target: locations[0],
+                        zoom: 12,
+                      ),
+                      markers: {
+                        ...locations.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          LatLng position = entry.value;
+                          return Marker(
+                            markerId: MarkerId(position.toString()),
+                            position: position,
+                            infoWindow: InfoWindow(
+                              title: locationNames[index],
+                              snippet:
+                              "Vĩ độ: ${position.latitude}, Kinh độ: ${position.longitude}",
                             ),
+                            onTap: () {
+                              setState(() {
+                                _selectedIndex = index;
+                              });
+                            },
+                          );
+                        }).toSet(),
+                      },
+                      polylines: polylines,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: true,
+                    ),
+                    Positioned(
+                      bottom: 260,
+                      right: 7,
+                      child: GestureDetector(
+                        onTap: () async {
+                          final phoneNumber = "tel:$trustPhone";
+                          if (await canLaunchUrl(Uri.parse(phoneNumber))) {
+                            await launchUrl(Uri.parse(phoneNumber));
+                          } else {
+                            print("Không thể gọi điện");
+                          }
+                        },
+                        child: Image.asset(
+                          'assets/images/sos.png',
+                          width: 45,
+                          height: 45,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 215,
+                      right: 7,
+                      child: FloatingActionButton(
+                        backgroundColor: Colors.white,
+                        mini: true,
+                        onPressed: () {
+                          mapController?.animateCamera(
+                            CameraUpdate.newLatLngZoom(currentLocation!, 18),
                           );
                         },
+                        child: Icon(Icons.my_location, color: Colors.blue),
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton(
-                          onPressed: isNavigating ? null : _startNavigation,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 8),
-                            minimumSize: const Size(100, 36),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                "Start",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.play_arrow,
-                                  color: Colors.white, size: 16),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: _stopNavigation,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 8),
-                            minimumSize: const Size(100, 36),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                "Stop",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.stop,
-                                  color: Colors.white, size: 16),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          key: const ValueKey('capture_button'),
-                          onPressed: () => {
-                            if (_selectedIndex != null)
-                              {_askCapture(_selectedIndex!)}
-                          },
-                          icon: const Icon(Icons.camera_alt_rounded,
-                              color: Colors.white, size: 18),
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(
-                                AppColors.orangeColor),
-                            minimumSize:
-                                WidgetStateProperty.all(const Size(36, 36)),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+          DraggableScrollableSheet(
+            initialChildSize: 0.3, // 30%
+            minChildSize: 0.3, //  10%
+            maxChildSize: 0.9, //  90%
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 10),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 3,
+                        color: Colors.black,
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: _instructions.length,
+                          itemBuilder: (context, index) {
+                            String instruction = _instructions[index].toLowerCase();
+                            IconData getIcon(String instruction) {
+                              if (instruction.contains("turn right")) {
+                                return Icons.turn_right;
+                              } else if (instruction.contains("turn left")) {
+                                return Icons.turn_left;
+                              } else if (instruction.contains("keep left")) {
+                                return Icons.arrow_left;
+                              } else if (instruction.contains("keep right")) {
+                                return Icons.arrow_right;
+                              } else if (instruction.contains("turn sharp")) {
+                                return Icons.turn_slight_right;
+                              } else if (instruction.contains("continue")) {
+                                return Icons.straight;
+                              } else if (instruction.contains("at roundabout")) {
+                                return Icons.roundabout_right;
+                              } else if (instruction.contains("arrive at destination")) {
+                                return Icons.flag;
+                              } else {
+                                return Icons.directions;
+                              }
+                            }
+                            return ListTile(
+                              leading: Icon(getIcon(instruction)),
+                              title: Text(
+                                index == currentStep
+                                    ? "**${_instructions[index]}** (Going...)"
+                                    : _instructions[index],
+                                style: TextStyle(
+                                  fontWeight: index == currentStep ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(
+                            onPressed: isNavigating ? null : _startNavigation,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              minimumSize: const Size(100, 36),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "Start",
+                                  style: TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: _stopNavigation,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              minimumSize: const Size(100, 36),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "Stop",
+                                  style: TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.stop, color: Colors.white, size: 16),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            key: const ValueKey('capture_button'),
+                            onPressed: () {
+                              if (_selectedIndex != null) {
+                                _askCapture(_selectedIndex!);
+                              }
+                            },
+                            icon: const Icon(Icons.camera_alt_rounded,
+                                color: Colors.white, size: 18),
+                            style: ButtonStyle(
+                              backgroundColor:
+                              WidgetStateProperty.all(AppColors.orangeColor),
+                              minimumSize: WidgetStateProperty.all(const Size(36, 36)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

@@ -30,7 +30,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
     if (widget.itineraryItems.locations.isEmpty) {
       return Scaffold(
         appBar: ItineraryAppBar(
-          titleText: 'Create Itinerary',
+          titleText: 'Detail Itinerary',
         ),
         body: const Center(
           child: Text(
@@ -47,12 +47,9 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
     void handleDialog(BuildContext context) async {
 
       bool? result = await showCustomNotice(
-          context, "Save Itinerary successfully.", "notice");
+          context, "Save Itinerary successfully.", "confirm");
       if (result == true) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyTrip()),
-        );
+        Navigator.pushNamed(context, '/my-trip');
       }
     }
 
@@ -117,6 +114,21 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                       children: [
                         ElevatedButton(
                           onPressed: () {
+                            Navigator.of(context).pop(null);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[700],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text("Cancel",
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
                             if (nameController.text.isEmpty) {
                               setState(() {
                                 errorMessage = "Please enter a trip name...";
@@ -134,21 +146,6 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                             ),
                           ),
                           child: const Text("Save",
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(null);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[700],
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text("Cancel",
                               style: TextStyle(color: Colors.white)),
                         ),
                       ],
@@ -179,7 +176,7 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
 
     return Scaffold(
       appBar: ItineraryAppBar(
-        titleText: 'Create Itinerary',
+        titleText: widget.itineraryItems.title!,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

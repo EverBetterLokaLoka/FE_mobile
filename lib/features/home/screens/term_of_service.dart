@@ -175,18 +175,17 @@ class _TermOfServiceState extends State<TermOfService> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => {
-                  if (isChecked) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TrustPhoneScreen(),
-                      ),
-                    )
-                  } else{
-                    setState(() {
-                      showError = true;
-                    })
-                  }
+                  if (isChecked)
+                    {
+                      Navigator.pushNamedAndRemoveUntil(context, '/trust-phone',
+                          (Route<dynamic> route) => false)
+                    }
+                  else
+                    {
+                      setState(() {
+                        showError = true;
+                      })
+                    }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF8C00),

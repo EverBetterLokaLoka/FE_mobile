@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../globals.dart';
 
 class Menu extends StatelessWidget {
   const Menu({super.key});
@@ -45,62 +48,63 @@ class Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange, Colors.teal],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return SafeArea(
+      child: Drawer(
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange, Colors.teal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "Hi, Phát",
+                      style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundImage:
+                        AssetImage('assets/images/avt.png'),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Hi, Phát",
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                ),
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage:
-                      NetworkImage('https://via.placeholder.com/150'),
-                ),
-              ],
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildMenuItem(context, Icons.person, "Account", '/profile'),
+                  _buildMenuItem(context, Icons.notifications, "Notification",
+                      '/notification'),
+                  _buildMenuItem(context, Icons.create, "Create Itinerary",
+                      '/create-itinerary'),
+                  _buildMenuItem(
+                      context, Icons.flight_takeoff, "My trip", '/my-trip'),
+                  _buildMenuItem(
+                      context, Icons.photo_library, "Moment", '/moment'),
+                  _buildMenuItem(context, Icons.group, "Friends", '/friends'),
+                  _buildMenuItem(context, Icons.map, "Map", '/map'),
+                  _buildMenuItem(context, Icons.warning, "SOS", '/sos',
+                      iconColor: Colors.red),
+                  _buildMenuItem(context, Icons.explore, "Explore", '/explore'),
+                  _buildMenuItem(context, Icons.info, "About Us", '/about-us'),
+                  _buildMenuItem(context, Icons.exit_to_app, "Sign out", null,
+                      iconColor: Colors.red, isLogout: true),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView(
-              children: [
-                _buildMenuItem(context, Icons.person, "Account", '/account'),
-                _buildMenuItem(context, Icons.notifications, "Notification",
-                    '/notification'),
-                _buildMenuItem(context, Icons.create, "Create Itinerary",
-                    '/create-itinerary'),
-                _buildMenuItem(
-                    context, Icons.flight_takeoff, "My trip", '/my-trip'),
-                _buildMenuItem(
-                    context, Icons.photo_library, "Moment", '/moment'),
-                _buildMenuItem(context, Icons.group, "Friends", '/friends'),
-                _buildMenuItem(context, Icons.map, "Map", '/map'),
-                _buildMenuItem(context, Icons.warning, "SOS", '/sos',
-                    iconColor: Colors.red),
-                _buildMenuItem(context, Icons.explore, "Explore", '/explore'),
-                _buildMenuItem(context, Icons.info, "About Us", '/about-us'),
-                _buildMenuItem(context, Icons.settings, "Setting", '/settings'),
-                _buildMenuItem(context, Icons.exit_to_app, "Sign out", null,
-                    iconColor: Colors.red, isLogout: true),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -111,10 +115,19 @@ class Menu extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: iconColor),
       title: Text(title, style: TextStyle(fontSize: 16)),
-      onTap: () {
+      onTap: () async{
         if (isLogout) {
           logout(context);
-        } else if (route != null) {
+        }
+        else if(route == "/sos"){
+          final phoneNumber = "tel:$trustPhone";
+          if (await canLaunchUrl(Uri.parse(phoneNumber))) {
+        await launchUrl(Uri.parse(phoneNumber));
+        } else {
+        print("Không thể gọi điện");
+        }
+        }
+        else if (route != null) {
           Navigator.pushNamed(context, route);
         }
       },

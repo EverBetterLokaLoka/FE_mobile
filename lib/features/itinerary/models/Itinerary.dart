@@ -9,7 +9,8 @@ class ItineraryResponse {
     final data = json['data'];
 
     if (data != null) {
-      final itineraryData = data['itinerary'];
+      final itineraryData = data['itineraries'] ?? data['itinerary'];
+
       List<dynamic> itineraryList = [];
 
       if (itineraryData is List) {
@@ -30,28 +31,53 @@ class ItineraryResponse {
 class Itinerary {
   int? id;
   String? title;
-  final String? description;
-  final String? price;
-  final List<Location> locations;
+  String? description;
+  String? price;
+  String? address;
+  int? status;
+  List<Location> locations;
+  DateTime? start_date;
+  int? init_date;
+  DateTime? updated_at;
 
   Itinerary({
     this.id,
     this.title,
     this.description,
     this.price,
+    this.address,
+    this.status,
     required this.locations,
+    this.start_date,
+    this.init_date,
+    this.updated_at
   });
 
   factory Itinerary.fromJson(Map<String, dynamic> json) {
     return Itinerary(
-      id: json['id'] != null ? json['id'] as int : 0,
+      id: json['id'] as int?,
       title: json['title'],
       description: json['description'],
-      // price: (json['price'] as num).toDouble(),
-      price: json['price'].toString(),
-      locations:
-          (json['locations'] as List).map((e) => Location.fromJson(e)).toList()
+      price: json['price']?.toString(),
+      address: json['address']?.toString(),
+      status: json['status'] as int?,
+      start_date: json['start_date'] != null ? DateTime.parse(json['start_date']) : null,
+      init_date: json['init_date'] as int?,
+      updated_at: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+      locations: (json['locations'] as List)
+          .map((e) => Location.fromJson(e))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'start_date': start_date?.toIso8601String(),
+      'init_date': init_date,
+      'updated_at': updated_at?.toIso8601String(),
+      'address': address,
+      'locations': locations.map((loc) => loc.toJson()).toList(),
+    };
   }
 
   @override
@@ -62,7 +88,7 @@ class Itinerary {
 
 class Location {
   final String name;
-  final int? day;
+  final int day;
   final String description;
   final bool? flag;
   final DateTime timeStart;
@@ -75,7 +101,7 @@ class Location {
 
   Location({
     required this.name,
-    this.day,
+    required this.day,
     required this.description,
     this.flag,
     required this.timeStart,
@@ -103,6 +129,13 @@ class Location {
           .map((e) => Activity.fromJson(e))
           .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'day': day,
+    };
   }
 }
 

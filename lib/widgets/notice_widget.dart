@@ -38,10 +38,10 @@ Future<bool?> showCustomNotice(
                   if (type == "confirm")
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop(false);
+                        Navigator.of(context).pop(true);
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.grey[700],
+                        backgroundColor: Colors.cyan,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
                         shape: RoundedRectangleBorder(
@@ -49,16 +49,16 @@ Future<bool?> showCustomNotice(
                         ),
                       ),
                       child: const Text(
-                        "Cancel",
+                        "OK",
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pop(true);
+                      Navigator.of(context).pop(false);
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.cyan,
+                      backgroundColor: Colors.grey[700],
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
                       shape: RoundedRectangleBorder(
@@ -66,7 +66,7 @@ Future<bool?> showCustomNotice(
                       ),
                     ),
                     child: const Text(
-                      "OK",
+                      "Cancel",
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
