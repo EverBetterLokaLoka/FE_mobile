@@ -606,29 +606,6 @@ class _AccountTabState extends State<AccountTab> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop(true); // Return true when Yes is pressed
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF00BCD4), // Turquoise color
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      minimumSize: Size(0, 45), // Height 45
-                    ),
-                    child: Text(
-                      'Yes',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
                       Navigator.of(context).pop(false); // Return false when No is pressed
                     },
                     style: ElevatedButton.styleFrom(
@@ -641,6 +618,29 @@ class _AccountTabState extends State<AccountTab> {
                     ),
                     child: Text(
                       'No',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true); // Return true when Yes is pressed
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF00BCD4), // Turquoise color
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      minimumSize: Size(0, 45), // Height 45
+                    ),
+                    child: Text(
+                      'Yes',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

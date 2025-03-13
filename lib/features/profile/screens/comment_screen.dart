@@ -133,13 +133,6 @@ class _CommentScreenState extends State<CommentScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 4),
-                Text(
-                  widget.post.title.isNotEmpty
-                      ? widget.post.title
-                      : widget.post.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),
