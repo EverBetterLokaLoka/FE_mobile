@@ -18,14 +18,13 @@ class EditPostScreen extends StatefulWidget {
 }
 
 class _EditPostScreenState extends State<EditPostScreen> {
-  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
 
-  List<PostImage> _existingImages = []; // Store existing images
-  Set<int> _imagesToDelete = {}; // Track IDs of images to delete
-  List<String> _uploadedImageUrls = []; // Store URLs of newly uploaded images
+  List<PostImage> _existingImages = [];
+  Set<int> _imagesToDelete = {};
+  List<String> _uploadedImageUrls = [];
 
   bool _isUploading = false;
   bool _isSaving = false;
@@ -33,7 +32,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController.text = widget.post.title;
     _contentController.text = widget.post.content;
     _existingImages = List.from(widget.post.images);
   }
@@ -48,7 +46,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
     try {
       final pickedFiles = await _picker.pickMultiImage();
       if (pickedFiles != null && pickedFiles.isNotEmpty) {
-        // Get token for upload
         String? token = await _authService.getToken();
         if (token == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +54,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
           return;
         }
 
-        // Upload each image and collect URLs
         for (var pickedFile in pickedFiles) {
           File imageFile = File(pickedFile.path);
           String? imageUrl = await _uploadImage(token, imageFile);
@@ -128,7 +124,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
     });
 
     try {
-      // Get authentication token
       String? token = await _authService.getToken();
       if (token == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,25 +132,19 @@ class _EditPostScreenState extends State<EditPostScreen> {
         return;
       }
 
-      // Prepare image list for new images (simple format like in _publishPost)
       List<Map<String, dynamic>> imageList = _uploadedImageUrls.map((url) => {
         'content': url,
-        // You can add other fields if needed
       }).toList();
 
-      // Prepare the request body
       Map<String, dynamic> requestBody = {
-        'title': _titleController.text,
         'content': _contentController.text,
-        'images': imageList,  // Only include new images
+        'images': imageList,
       };
 
-      // If there are images to delete, include their IDs
       if (_imagesToDelete.isNotEmpty) {
         requestBody['deleteImageIds'] = _imagesToDelete.toList();
       }
 
-      // Send the PUT request to update the post
       final response = await http.put(
         Uri.parse('${ApiService().baseUrl}/posts/${widget.post.id}'),
         headers: {
@@ -166,14 +155,12 @@ class _EditPostScreenState extends State<EditPostScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Filter out deleted images
         List<PostImage> remainingImages = _existingImages
             .where((image) => !_imagesToDelete.contains(image.id))
             .toList();
 
-        // Create PostImage objects for new images
         List<PostImage> newImages = _uploadedImageUrls.map((url) => PostImage(
-          id: 0, // The backend will assign proper IDs
+          id: 0,
           content: url,
           shares: null,
           locationId: null,
@@ -187,10 +174,8 @@ class _EditPostScreenState extends State<EditPostScreen> {
           updatedAt: null,
         )).toList();
 
-        // Create updated post object
         Post updatedPost = Post(
           id: widget.post.id,
-          title: _titleController.text,
           content: _contentController.text,
           userId: widget.post.userId,
           userEmail: widget.post.userEmail,
@@ -206,18 +191,15 @@ class _EditPostScreenState extends State<EditPostScreen> {
           destroyed: widget.post.destroyed,
         );
 
-        // Call the callback to update the post in the parent widget
         widget.onUpdate(updatedPost);
-
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Post updated successfully!'))
         );
 
-        Navigator.of(context).pop(); // Close the edit screen
+        Navigator.of(context).pop();
       } else {
         print('Failed to update post: ${response.statusCode}');
         print('Response body: ${response.body}');
-
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to update post: ${response.statusCode}'))
         );
@@ -236,7 +218,8 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+
+
     _contentController.dispose();
     super.dispose();
   }
@@ -244,32 +227,13 @@ class _EditPostScreenState extends State<EditPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Post'),
-        actions: [
-          if (_isSaving)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-        ],
-      ),
+
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          
           children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
-            ),
             TextField(
               controller: _contentController,
               decoration: InputDecoration(labelText: 'Content'),
@@ -281,7 +245,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             SizedBox(height: 10),
-            // Display existing images with option to delete
             if (_existingImages.isNotEmpty)
               SizedBox(
                 height: 120,
@@ -371,7 +334,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             SizedBox(height: 10),
-            // Display newly uploaded images
             if (_uploadedImageUrls.isNotEmpty)
               SizedBox(
                 height: 120,
@@ -470,7 +432,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                       Text('Updating...'),
                     ],
                   )
-                      : Text('Update Post'),
+                      : Text('Save'),
                 ),
               ],
             ),
