@@ -44,18 +44,12 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
         .where((location) => location.day == selectedDay)
         .toList();
 
-    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.first.day}");
-    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.last.day}");
-    print("widget.itineraryItems.locations.first.day${widget.itineraryItems.locations.length}");
     void handleDialog(BuildContext context) async {
 
       bool? result = await showCustomNotice(
-          context, "Save Itinerary successfully.", "notice");
+          context, "Save Itinerary successfully.", "confirm");
       if (result == true) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyTrip()),
-        );
+        Navigator.pushNamed(context, '/my-trip');
       }
     }
 
@@ -120,6 +114,21 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                       children: [
                         ElevatedButton(
                           onPressed: () {
+                            Navigator.of(context).pop(null);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[700],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text("Cancel",
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
                             if (nameController.text.isEmpty) {
                               setState(() {
                                 errorMessage = "Please enter a trip name...";
@@ -137,21 +146,6 @@ class _DetailItineraryScreenState extends State<DetailItineraryScreen> {
                             ),
                           ),
                           child: const Text("Save",
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(null);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[700],
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text("Cancel",
                               style: TextStyle(color: Colors.white)),
                         ),
                       ],

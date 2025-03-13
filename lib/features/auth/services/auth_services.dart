@@ -75,26 +75,35 @@ class AuthService {
         }
 
         saveToken(token);
-        showCustomNotice(context, 'Your account has been created successfully.', 'confirm');
+        showCustomNotice(
+            context, 'Your account has been created successfully.', 'confirm');
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => TermOfService()),
         );
       } else {
         final responseData = jsonDecode(response.body);
-        String errorMessage = responseData["message"] ?? "An unknown error occurred.";
+        String errorMessage =
+            responseData["message"] ?? "An unknown error occurred.";
 
         if (response.statusCode == 409) {
-          errorMessage = "This email is already in use. Please use a different email or log in.";
+          errorMessage =
+              "This email is already in use. Please use a different email or log in.";
         }
 
         showCustomNotice(context, errorMessage, "notice");
       }
     } on SocketException {
-      showCustomNotice(context, "No internet connection. Please turn on Wi-Fi or mobile data.", "error");
+      showCustomNotice(
+          context,
+          "No internet connection. Please turn on Wi-Fi or mobile data.",
+          "error");
     } on FormatException {
-      showCustomNotice(context, "Server returned an invalid response. Please try again later.", "error");
+      showCustomNotice(
+          context,
+          "Server returned an invalid response. Please try again later.",
+          "error");
     } catch (e) {
       showCustomNotice(context, "An unexpected error occurred: $e", "error");
     } finally {
@@ -214,6 +223,7 @@ class AuthService {
       print("Token is still valid!");
     }
   }
+
   // Add a new method to save the username in SharedPreferences
   Future<void> saveUserName(String username) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -221,11 +231,12 @@ class AuthService {
   }
 
 // Modify getUserNameFromToken to save the username
-  Future<String?> getUserNameFromToken() async {
+  Future<String?> getUserNameFromToken(BuildContext context) async {
     try {
       String? token = await getToken();
       if (token == null) {
         print("No token found!");
+        Navigator.pushNamed(context, '/login');
         return null;
       }
 
@@ -245,11 +256,10 @@ class AuthService {
       return null;
     }
   }
+
   // Method to get username from SharedPreferences
   Future<String?> getUserNameFromPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString("user_name");
   }
-
-
 }

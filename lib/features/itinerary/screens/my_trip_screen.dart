@@ -3,20 +3,21 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lokaloka/core/styles/colors.dart';
 import 'package:lokaloka/features/itinerary/models/Itinerary.dart';
 import 'package:lokaloka/features/itinerary/screens/detail_itinerary_screen.dart';
+import '../../../globals.dart';
 import '../../../widgets/app_bar_widget.dart';
 import '../../../widgets/notice_widget.dart';
 import '../../navigation/screens/map_navigation_screen.dart';
 import '../../weather/services/LocationService.dart';
 import '../services/itinerary_api.dart';
 
-class MyTrip extends StatefulWidget {
-  const MyTrip({Key? key}) : super(key: key);
+class MyTripScreen extends StatefulWidget {
+  const MyTripScreen({Key? key}) : super(key: key);
 
   @override
   _MyTripState createState() => _MyTripState();
 }
 
-class _MyTripState extends State<MyTrip> {
+class _MyTripState extends State<MyTripScreen> {
   final ItineraryApi _itineraryService = ItineraryApi();
   List<Map<String, dynamic>> allItineraries = [];
   List<Map<String, dynamic>> filteredItineraries = [];
@@ -29,34 +30,76 @@ class _MyTripState extends State<MyTrip> {
   void initState() {
     super.initState();
     _fetchItineraries();
-    _fetchLocations();
   }
 
-  Future<void> _fetchLocations() async {
+  Future<void> splitLocation(int? id, Itinerary itinerary) async {
+    //Change status
+    bool? updateStatus = await ItineraryApi().goItineraryUpdate(id, itinerary);
+
+    //get by id itinerary to go
+    if (!updateStatus!) {
+      return;
+    }
+    Itinerary GoItinerary = await ItineraryApi().getItineraryById(id);
+
+    ItineraryApi().checkItineraryStatus(GoItinerary.toJson());
+
+    if (GoItinerary.start_date == null) {
+      print("❌ Chưa có ngày bắt đầu.");
+      return;
+    }
+
+    DateTime updatedAt = GoItinerary.updated_at ?? DateTime.now();
+    DateTime startDate = GoItinerary.start_date ?? DateTime.now();
+    int initDate = GoItinerary.init_date ?? 0;
+
+    int daysPassed = updatedAt.difference(startDate).inDays;
+
+    if (daysPassed >= initDate) {
+      print("✅ Chuyến đi đã hoàn thành!");
+      return;
+    }
+
+    int currentDay = daysPassed + 1;
+
+    List<Location> todayLocations =
+        GoItinerary.locations.where((loc) => loc.day == currentDay).toList();
+
+    if (todayLocations.isEmpty) {
+      print("❌ Không có địa điểm nào cho ngày $currentDay.");
+      return;
+    }
+
+    List<String> locationNames = todayLocations.map((loc) => loc.name).toList();
+    String? address = GoItinerary.address;
+
     List<LatLng> fetchedLocations =
-        await LocationService.getCoordinatesForLocations(locationNames);
+        await LocationService.getCoordinatesFromAddresses(
+            locationNames, address!);
+
     setState(() {
       locations = fetchedLocations;
     });
-  }
 
-  Future<void> spilitLocations(Itinerary itinerary) async {
-    List<String> locationNames =
-        itinerary.locations.map((loc) => loc.name).toList();
+    print("📍 Địa điểm ngày $currentDay: $locationNames");
+    print("🗺️ Danh sách tọa độ: $locations");
 
-    List<LatLng> fetchedLocations =
-        await LocationService.getCoordinatesForLocations(locationNames);
-
-    setState(() {
-      locations = fetchedLocations;
-    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapNavigationScreen(
+          title: GoItinerary.title,
+          locations: locations,
+          locationNames: locationNames,
+        ),
+      ),
+    );
   }
 
   Future<void> _fetchItineraries() async {
     setState(() => isLoading = true);
 
     final itineraries = await _itineraryService.fetchItineraries();
-    print("get 1231231232312312312312312312312123123123");
     setState(() {
       allItineraries = itineraries;
       _filterItineraries();
@@ -142,17 +185,17 @@ class _MyTripState extends State<MyTrip> {
     return Scaffold(
       bottomNavigationBar: AppBarCustom(),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.orange,
+        shape: CircleBorder(),
         onPressed: () {
-          Navigator.pushNamed(context, '/create-itinerary');
+          Navigator.pushNamed(context, "/create-itinerary");
         },
-        backgroundColor: AppColors.orangeColor,
-        heroTag: "Itinerary",
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.add, size: 28, color: Colors.white),
             Text("Itinerary",
-                style: TextStyle(fontSize: 10, color: Colors.white)),
+                style: TextStyle(fontSize: 12, color: Colors.white)),
           ],
         ),
       ),
@@ -352,18 +395,9 @@ class _MyTripState extends State<MyTrip> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => {
-                        // splittLocation(Itinerary.fromJson(trip))
-                        // getById(trip.id!)
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MapNavigationScreen(
-                              locations: [],
-                              locationNames: [],
-                            ),
-                          ),
-                        )
+                      onPressed: () async {
+                        Itinerary itinerary = Itinerary.fromJson(trip);
+                        await splitLocation(itinerary.id, itinerary);
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(35, 23),

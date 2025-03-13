@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokaloka/features/auth/screens/login_screen.dart';
 import '../../../core/styles/colors.dart';
 import '../../../widgets/notice_widget.dart';
 import '../../home/screens/term_of_service.dart';
@@ -372,7 +373,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const Text("Already have an account? "),
         GestureDetector(
           onTap: () {
-            Navigator.pushNamed(context, '/login');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Login()),
+            );
           },
           child: const Text(
             "Sign in.",

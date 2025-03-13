@@ -31,17 +31,20 @@ class AppRoutes {
         return MaterialPageRoute(
             builder: (_) => MapScreen(), settings: settings);
       case '/my-trip':
-        return MaterialPageRoute(builder: (_) => MyTrip(), settings: settings);
+        return MaterialPageRoute(
+            builder: (_) => MyTripScreen(), settings: settings);
       case '/create-itinerary':
         return MaterialPageRoute(
             builder: (_) => CreateItinerary(), settings: settings);
       case '/profile':
-      return MaterialPageRoute(builder: (_) => ProfileScreen());
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
       // return MaterialPageRoute(builder: (_) => ProfileScreen(), settings: settings);
       case '/weather':
         return MaterialPageRoute(
             builder: (_) => WeatherScreen(), settings: settings);
-        return MaterialPageRoute(builder: (_) => ProfileScreen());
+      case '/trust-phone':
+        return MaterialPageRoute(
+            builder: (_) => WeatherScreen(), settings: settings);
       case '/moment':
         return MaterialPageRoute(builder: (_) => MomentsScreen());
       default:

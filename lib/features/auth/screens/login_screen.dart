@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lokaloka/core/styles/colors.dart';
+import 'package:lokaloka/features/auth/screens/sign_up_screen.dart';
 import '../../../widgets/notice_widget.dart';
 import '../services/auth_services.dart';
 import 'forgot_password_screen.dart';
@@ -47,7 +48,7 @@ class _LoginState extends State<Login> {
 
     if (data != null) {
       print("Login successful! ${data.name}");
-      Navigator.pushNamed(context, '/home');
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (Route<dynamic> route) => false);
     } else {
       showCustomNotice(context, "Invalid email or password. Please try again.", "error");
     }
@@ -295,7 +296,10 @@ class _LoginState extends State<Login> {
                     const Text("Don't have an account? "),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, '/sign-up');
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignUpScreen()),
+                        );
                       },
                       child: const Text(
                         "Sign up.",

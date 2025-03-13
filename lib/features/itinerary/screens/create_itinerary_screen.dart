@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../globals.dart';
 import '../widgets/itinerary-app_bar.dart';
 import 'create_iitinerary_by_ai_screen.dart';
@@ -18,6 +17,7 @@ class CreateItinerary extends StatefulWidget {
 
 void updateTravelDays(int days) {
   travelDays = days;
+  print("travelDays$travelDays");
 }
 
 class _CreateItineraryState extends State<CreateItinerary> {
@@ -27,8 +27,6 @@ class _CreateItineraryState extends State<CreateItinerary> {
   final TextEditingController _dayController = TextEditingController();
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
-  DateTime? _selectedStartDate;
-  DateTime? _selectedEndDate;
   List<Map<String, dynamic>> vietnameseData = [];
   final translator = GoogleTranslator();
 
@@ -36,46 +34,6 @@ class _CreateItineraryState extends State<CreateItinerary> {
   List<Map<String, dynamic>> _locations = [];
   String? _selectedLocation;
   bool _isLoading = true;
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime currentDate = DateTime.now();
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedStartDate ?? currentDate,
-      firstDate: currentDate,
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() {
-        _selectedStartDate = pickedDate;
-        _startDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-      });
-      _updateEndDate();
-    }
-  }
-
-  Future<void> _updateEndDate() async {
-    if (_selectedStartDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select start date first.")),
-      );
-      return;
-    } else if (_dayController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please type how many days.")),
-      );
-      return;
-    }
-
-    final int days = int.tryParse(_dayController.text) ?? 7;
-    _selectedEndDate = _selectedStartDate!.add(Duration(days: days - 1));
-
-    setState(() {
-      _endDateController.text =
-          DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
-    });
-  }
 
   Future<void> translateData(List<Map<String, dynamic>> vietnameseData) async {
     final translator = GoogleTranslator();
@@ -231,53 +189,18 @@ class _CreateItineraryState extends State<CreateItinerary> {
 
                     return null;
                   },
-                  onChanged: (value) {
-                    final int? days = int.tryParse(value);
-                    if (days != null && days > 0 && days <= 7) {
-                      _updateEndDate();
-                    }
-                  },
                 ),
                 SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _startDateController,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'Start date',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        onTap: () => _selectDate(context),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _endDateController,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: 'End date',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        onTap: () => _updateEndDate(),
-                      ),
-                    ),
-                  ],
-                ),
                 Spacer(),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 15.0, vertical: 20),
+                      horizontal: 5, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SizedBox(
-                        width: 170,
-                        height: 50,
+                        width: 160,
+                        height: 45,
                         child: ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
@@ -289,6 +212,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
+                            padding: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
                           ),
                           child: Text(
                             'Create Trip Manually',
@@ -302,11 +226,12 @@ class _CreateItineraryState extends State<CreateItinerary> {
                       ),
                       SizedBox(width: 10),
                       SizedBox(
-                        width: 170,
-                        height: 50,
+                        width: 160,
+                        height: 45,
                         child: ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
+                              cityTrip = _selectedLocation.toString();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -323,6 +248,7 @@ class _CreateItineraryState extends State<CreateItinerary> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
+                            padding: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

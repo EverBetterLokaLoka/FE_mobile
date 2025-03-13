@@ -7,8 +7,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../globals.dart';
 import '../../../widgets/app_bar_widget.dart';
+import '../../../widgets/menu_widget.dart';
 import '../../auth/services/auth_services.dart';
 import '../../navigation/services/navigation_api.dart';
+import '../../notification/screens/notification_screen.dart';
 import '../../profile/services/profile_services.dart';
 import '../../weather/services/LocationService.dart';
 
@@ -20,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
   LatLng? currentLocation;
   final ProfileService _profileService = ProfileService();
 
@@ -133,25 +136,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: AppBarCustom(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/create-itinerary');
-        },
-        backgroundColor: Colors.orange,
-        heroTag: "Itinerary",
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 28, color: Colors.white),
-            Text("Itinerary",
-                style: TextStyle(fontSize: 10, color: Colors.white)),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: SafeArea(
-        child: Container(
+      body:
+      SafeArea(
+        child:
+        Container(
           width: double.infinity,
           height: MediaQuery.of(context).size.height * 1.2,
           decoration: const BoxDecoration(
@@ -182,6 +170,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: AppBarCustom(),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.orange,
+        shape: CircleBorder(),
+        onPressed: () {
+          Navigator.pushNamed(context, "/create-itinerary");
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 28, color: Colors.white),
+            Text("Itinerary",
+                style: TextStyle(fontSize: 12, color: Colors.white)),
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 

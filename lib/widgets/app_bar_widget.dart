@@ -24,47 +24,65 @@ class AppBarCustom extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(Icons.home, '/home', context, "Home", currentRoute),
-            _buildNavItem(Icons.map, '/my-trip', context, "My Trip", currentRoute),
+            _buildNavItem(
+                Icons.map, '/my-trip', context, "My Trip", currentRoute),
             SizedBox(width: 40),
-            _buildNavItem(Icons.notifications, '/notification', context, "Notification", currentRoute, screen: NotificationScreen()),
-            _buildNavItem(Icons.menu, '/menu', context, "Menu", currentRoute, screen: Menu()),
+            _buildNavItem(Icons.notifications, '/notification', context,
+                "Notification", currentRoute,
+                screen: NotificationScreen()),
+            _buildNavItem(Icons.menu, '/menu', context, "Menu", currentRoute,
+                screen: Menu()),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildNavItem(IconData icon, String route, BuildContext context, String label, String? currentRoute, {Widget? screen}) {
-    bool isActive = currentRoute == route;
-    Color color = isActive ? AppColors.orangeColor : Colors.white;
+Widget _buildNavItem(IconData icon, String route, BuildContext context,
+    String label, String? currentRoute,
+    {Widget? screen}) {
+  bool isActive = currentRoute == route;
+  Color color = isActive ? AppColors.orangeColor : Colors.white;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(icon, color: color, size: 30),
-          onPressed: () {
-            if (screen != null) {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => screen,
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0);
-                    const end = Offset.zero;
-                    const curve = Curves.easeInOut;
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    return SlideTransition(position: animation.drive(tween), child: child);
-                  },
-                ),
-              );
-            } else {
-              Navigator.pushNamed(context, route);
-            }
-          },
-        ),
-        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
-      ],
-    );
-  }
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      IconButton(
+        icon: Icon(icon, color: color, size: 30),
+        onPressed: () {
+          String? currentRoute0 = ModalRoute.of(context)?.settings.name;
+          if (currentRoute0 == route) {
+            return;
+          }
+
+          if (screen != null) {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => screen,
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                      position: animation.drive(tween), child: child);
+                },
+              ),
+            );
+          } else {
+            Navigator.pushNamed(context, route);
+          }
+        },
+      ),
+      Text(label,
+          style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
+    ],
+  );
 }
