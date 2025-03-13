@@ -125,7 +125,6 @@ class _HomeTabState extends State<HomeTab> {
       if (index != -1) {
         final updatedPost = Post(
           id: post.id,
-          title: post.title,
           content: post.content,
           userId: post.userId,
           userEmail: post.userEmail,
@@ -296,10 +295,17 @@ class _HomeTabState extends State<HomeTab> {
                       backgroundColor: Colors.blue,
                     ),
                     SizedBox(width: 8),
-                    Text(
-                      post.userName,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.userName,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12))
+                      ],
+                    )
+
                   ],
                 ),
                 if (post.userId == _currentUserId)
@@ -328,12 +334,6 @@ class _HomeTabState extends State<HomeTab> {
               ],
             ),
             SizedBox(height: 10),
-            Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12)),
-            if (post.title.isNotEmpty)
-              Text(
-                post.title,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
             if (post.content.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),

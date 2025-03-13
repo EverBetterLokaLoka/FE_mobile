@@ -447,7 +447,6 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
     return Container(); // Default case; return an empty container
   }
   Future<void> _publishPost() async {
-    String title = "Bài post của Phát"; // Đây có thể là input của người dùng
     String content = _contentController.text;
 
     // Kiểm tra xem người dùng có nhập nội dung hoặc tải ảnh lên không
@@ -481,7 +480,6 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'title': title,
           'content': content,
           'images': imageList,  // Đảm bảo rằng 'images' là danh sách đối tượng
         }),

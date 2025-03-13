@@ -1,6 +1,5 @@
 class Post {
   final int id;
-  final String title;
   final String content;
   final int userId;
   final String userEmail;
@@ -17,7 +16,6 @@ class Post {
 
   Post({
     required this.id,
-    required this.title,
     required this.content,
     required this.userId,
     required this.userEmail,
@@ -52,7 +50,6 @@ class Post {
   }) {
     return Post(
       id: id ?? this.id,
-      title: title ?? this.title,
       content: content ?? this.content,
       userId: userId ?? this.userId,
       userEmail: userEmail ?? this.userEmail,
@@ -72,7 +69,6 @@ class Post {
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['id'] ?? 0,
-      title: json['title'] ?? '',
       content: json['content'] ?? '',
       userId: json['user_id'] ?? 0,
       userEmail: json['userEmail'] ?? '',
@@ -92,7 +88,6 @@ class Post {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
       'content': content,
       'userId': userId,
       'userEmail': userEmail,

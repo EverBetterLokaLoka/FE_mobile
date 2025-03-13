@@ -210,7 +210,14 @@ class PostCard extends StatelessWidget {
                   children: [
                     CircleAvatar(backgroundImage: NetworkImage(post.avatar)),
                     SizedBox(width: 8),
-                    Text(post.userName, style: TextStyle(fontWeight: FontWeight.bold)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(post.userName, style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12))
+                      ],
+                    )
+
                   ],
                 ),
                 if (post.userId == currentUserId) // Kiểm tra nếu bài viết thuộc về người dùng hiện tại
@@ -241,12 +248,6 @@ class PostCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 4),
-            Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12)),
-            if (post.title.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(post.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
             if (post.content.isNotEmpty)
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
