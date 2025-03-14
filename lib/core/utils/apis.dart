@@ -4,7 +4,7 @@ import '../../features/auth/services/auth_services.dart';
 import '../constants/url_constant.dart';
 
 class ApiService {
-  final String baseUrl = 'https://2b26-113-176-99-140.ngrok-free.app/api';
+  final String baseUrl = 'https://a769-113-176-99-140.ngrok-free.app/api';
 
   final String imgKey = "b49d82fbb2dbf713c012d1441415c8cb4e969a4c";
 
