@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lokaloka/core/utils/apis.dart';
@@ -31,14 +30,18 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
   late String uploadUrl;
   bool _isExpanded = false;
   bool _isPickingImage = false;
-  List<File> _selectedImages = []; // List to hold selected images
-  List<String> _uploadedImageUrls = []; // List to hold uploaded image URLs
+  bool _isPublishEnabled = false; // Thêm biến để kiểm soát trạng thái nút "Public"
+  List<File> _selectedImages = [];
+  List<String> _uploadedImageUrls = [];
 
   @override
   void initState() {
     super.initState();
     uploadUrl = "${ApiService().baseUrl}/upload";
     _dragController.addListener(_onDragUpdate);
+
+    // Thêm listener để kiểm tra trạng thái nút "Public"
+    _contentController.addListener(_checkPublishButtonStatus);
   }
 
   void _onDragUpdate() {
@@ -51,10 +54,17 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
 
   @override
   void dispose() {
+    _contentController.removeListener(_checkPublishButtonStatus);
     _contentController.dispose();
     _dragController.removeListener(_onDragUpdate);
     _dragController.dispose();
     super.dispose();
+  }
+
+  void _checkPublishButtonStatus() {
+    setState(() {
+      _isPublishEnabled = _contentController.text.isNotEmpty || _uploadedImageUrls.isNotEmpty;
+    });
   }
 
   void _handlePublish() {
@@ -68,7 +78,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
     _isPickingImage = true;
 
     try {
-      final pickedFiles = await _picker.pickMultiImage(); // Allow selection of multiple images
+      final pickedFiles = await _picker.pickMultiImage();
       if (pickedFiles != null && pickedFiles.isNotEmpty) {
         for (var pickedFile in pickedFiles) {
           setState(() {
@@ -105,9 +115,10 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         final jsonResponse = json.decode(responseData);
         print('Upload successful: ${jsonResponse['data']}');
 
-        // Add the uploaded image URL to the list
+        // Thêm URL của ảnh đã tải lên vào danh sách và kiểm tra trạng thái nút
         setState(() {
-          _uploadedImageUrls.add(jsonResponse['data']); // Add URL to list
+          _uploadedImageUrls.add(jsonResponse['data']);
+          _checkPublishButtonStatus();
         });
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image uploaded successfully!')));
@@ -176,14 +187,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
-                        ),
-                        Text(
-                          widget.userLocation,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
+                        )
                       ],
                     ),
                   ],
@@ -281,9 +285,9 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                           // Action buttons
                           _buildActionButton(
                             icon: Icons.image,
-                            label: 'Choose images', // changed to plural
+                            label: 'Choose images',
                             color: Colors.blue,
-                            onTap: _pickImages, // Call the new method here
+                            onTap: _pickImages,
                           ),
                           _buildActionButton(
                             icon: Icons.emoji_emotions,
@@ -317,10 +321,10 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                               children: [
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: _handlePublish,
-                                    child: Text('Public'),
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('Cancel'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.teal,
+                                      backgroundColor: Colors.grey,
                                       foregroundColor: Colors.white,
                                       padding: EdgeInsets.symmetric(vertical: 12),
                                       shape: RoundedRectangleBorder(
@@ -332,10 +336,10 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('Cancel'),
+                                    onPressed: _isPublishEnabled ? _handlePublish : null,
+                                    child: Text('Public'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey,
+                                      backgroundColor: _isPublishEnabled ? Colors.teal : Colors.grey,
                                       foregroundColor: Colors.white,
                                       padding: EdgeInsets.symmetric(vertical: 12),
                                       shape: RoundedRectangleBorder(
@@ -360,14 +364,12 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
     );
   }
 
-  // Method to build widgets for the uploaded images
   Widget _buildImageWidgets() {
     int imageCount = _uploadedImageUrls.length;
 
     if (imageCount == 0) {
       return Container(); // No images to show
     } else if (imageCount == 1) {
-      // Show one image
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Image.network(
@@ -378,7 +380,6 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         ),
       );
     } else if (imageCount == 2) {
-      // Show two images
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -391,7 +392,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
               ),
             ),
           ),
-          SizedBox(width: 8), // Space between images
+          SizedBox(width: 8),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -404,7 +405,6 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         ],
       );
     } else if (imageCount >= 3) {
-      // Show three or more images
       return Column(
         children: [
           Row(
@@ -444,8 +444,9 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
       );
     }
 
-    return Container(); // Default case; return an empty container
+    return Container();
   }
+
   Future<void> _publishPost() async {
     String content = _contentController.text;
 
@@ -468,7 +469,6 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
     // Dữ liệu gửi lên server
     List<Map<String, dynamic>> imageList = _uploadedImageUrls.map((url) => {
       'content': url,
-      // Có thể thêm các trường khác nếu cần thiết, như userId, postId, v.v.
     }).toList();
 
     // Bắt đầu gửi yêu cầu đến server
@@ -481,7 +481,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         },
         body: jsonEncode({
           'content': content,
-          'images': imageList,  // Đảm bảo rằng 'images' là danh sách đối tượng
+          'images': imageList,
         }),
       );
 
@@ -491,7 +491,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Post published successfully!')));
         }
-        Navigator.pop(context); // Quay lại màn hình trước
+        Navigator.pop(context);
       } else {
         final responseData = response.body;
         if (mounted) {

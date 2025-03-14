@@ -567,7 +567,7 @@ class _AccountTabState extends State<AccountTab> {
         child: ElevatedButton(
           onPressed: _handleLogout,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.orange,
             textStyle: TextStyle(color: Colors.white),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),

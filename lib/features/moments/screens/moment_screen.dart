@@ -71,45 +71,71 @@ class _MomentsScreenState extends State<MomentsScreen> {
 
     final bool isLiked = post.likes.any((like) => like.userId == _currentUser!.id);
     final List<Like> updatedLikes = List.from(post.likes);
+    final int updatedLikeCount = isLiked ? post.likeCount - 1 : post.likeCount + 1;
 
-    if (isLiked) {
-      updatedLikes.removeWhere((like) => like.userId == _currentUser!.id);
-    } else {
-      updatedLikes.add(Like(
-        id: 0, // Giá trị tạm thời, server sẽ tạo ID thực
-        postId: post.id,
-        userId: _currentUser!.id,
-        userEmail: _currentUser!.email, // Đảm bảo UserNormal có email
-        createdAt: DateTime.now(),
-      ));
-    }
-
+    // Update the local state to reflect immediate feedback
     setState(() {
+      if (isLiked) {
+        // User is unliking the post
+        updatedLikes.removeWhere((like) => like.userId == _currentUser!.id);
+      } else {
+        // User is liking the post
+        updatedLikes.add(Like(
+          id: 0, // Use a temporary ID
+          postId: post.id,
+          userId: _currentUser!.id,
+          userEmail: _currentUser!.email,
+          createdAt: DateTime.now(),
+        ));
+      }
+
+      // Update the post with the new like state without changing the content
       final index = _posts.indexWhere((p) => p.id == post.id);
       if (index != -1) {
         _posts[index] = post.copyWith(
           likes: updatedLikes,
-          likeCount: isLiked ? post.likeCount - 1 : post.likeCount + 1,
+          likeCount: updatedLikeCount,
         );
       }
     });
 
     try {
-      final updatedPost = await _profileService.toggleLike(post.id);
+      // Call the API to toggle the like
+      await _profileService.toggleLike(post.id);
+      // No need to update state again - we've already handled it above in setState
+    } catch (e) {
+      print('Error toggling like: $e');
+
+      // In case of failure, revert the change
       setState(() {
         final index = _posts.indexWhere((p) => p.id == post.id);
         if (index != -1) {
-          _posts[index] = updatedPost; // Cập nhật lại từ server
+          // Revert to the previous like state as needed
+          if (isLiked) {
+            updatedLikes.add(Like(
+              id: 0, // Use the temporary ID previously assigned
+              postId: post.id,
+              userId: _currentUser!.id,
+              userEmail: _currentUser!.email,
+              createdAt: DateTime.now(),
+            ));
+          } else {
+            updatedLikes.removeWhere((like) => like.userId == _currentUser!.id);
+          }
+
+          // Update like count back to original
+          _posts[index] = post.copyWith(
+            likes: updatedLikes,
+            likeCount: isLiked ? updatedLikeCount + 1 : updatedLikeCount - 1,
+          );
         }
       });
-    } catch (e) {
-      print('Error toggling like: $e');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update like status')),
       );
     }
   }
-
   void _createNewPost() {
     if (_currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -220,31 +246,7 @@ class PostCard extends StatelessWidget {
 
                   ],
                 ),
-                if (post.userId == currentUserId) // Kiểm tra nếu bài viết thuộc về người dùng hiện tại
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        // Logic cho việc chỉnh sửa bài viết
-                      } else if (value == 'delete') {
-                        onDelete(post.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Post deleted')),
-                        );
-                      }
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return <PopupMenuEntry<String>>[
-                        const PopupMenuItem<String>(
-                          value: 'edit',
-                          child: Text('Edit'),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Text('Delete'),
-                        ),
-                      ];
-                    },
-                  ),
+
               ],
             ),
             SizedBox(height: 4),
@@ -263,27 +265,64 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildImageGrid(List<PostImage> images) {
+    if (images.length == 3) {
+      return Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              images[0].content,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    images[1].content,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(width: 5),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    images[2].content,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Mặc định hiển thị dạng lưới 2x2 nếu có từ 4 ảnh trở lên
     return GridView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,  // Chỉ 2 hình ảnh trong mỗi hàng
+        crossAxisCount: images.length == 1 ? 1 : 2,
         crossAxisSpacing: 5,
         mainAxisSpacing: 5,
       ),
-      itemCount: images.length > 4 ? 4 : images.length,  // Hạn chế số lượng hình ảnh hiển thị nếu có hơn 4 hình
+      itemCount: images.length > 4 ? 4 : images.length,
       itemBuilder: (context, index) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Image.network(
             images[index].content,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[200],
-                child: Icon(Icons.error),
-              );
-            },
           ),
         );
       },
