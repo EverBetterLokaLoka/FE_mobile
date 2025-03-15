@@ -28,7 +28,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   bool _isUploading = false;
   bool _isSaving = false;
-  bool _hasChanges = false; // Biến theo dõi sự thay đổi nội dung hoặc hình ảnh
 
   @override
   void initState() {
@@ -39,8 +38,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   void _checkChanges() {
     setState(() {
-      // Nếu nội dung không rỗng hoặc có hình ảnh mới được tải lên, coi là đã thay đổi
-      _hasChanges = _contentController.text.trim().isNotEmpty || _uploadedImageUrls.isNotEmpty;
+      // Kiểm tra thay đổi
     });
   }
 
@@ -68,7 +66,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
           if (imageUrl != null) {
             setState(() {
               _uploadedImageUrls.add(imageUrl);
-              _checkChanges(); // Gọi phương thức kiểm tra thay đổi
+              _checkChanges(); // Kiểm tra thay đổi
             });
           }
         }
@@ -98,7 +96,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
         final responseData = await response.stream.bytesToString();
         final jsonResponse = json.decode(responseData);
         print('Upload successful: ${jsonResponse['data']}');
-        return jsonResponse['data']; // Return the URL
+        return jsonResponse['data'];
       } else {
         final responseData = await response.stream.bytesToString();
         print('Upload failed with status: ${response.statusCode}');
@@ -239,7 +237,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
               controller: _contentController,
               decoration: InputDecoration(labelText: 'Content'),
               onChanged: (text) {
-                _checkChanges(); // Kiểm tra sự thay đổi trong nội dung
+                _checkChanges();
               },
             ),
             SizedBox(height: 20),
@@ -299,7 +297,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                                   } else {
                                     _removeExistingImage(index);
                                   }
-                                  _checkChanges(); // Cập nhật trạng thái thay đổi
+                                  _checkChanges();
                                 });
                               },
                               child: Container(
@@ -412,7 +410,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                    ), // Màu nút "Cancel"
+                    ),
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                     child: Text('Cancel'),
                   ),
@@ -420,9 +418,19 @@ class _EditPostScreenState extends State<EditPostScreen> {
                 SizedBox(
                   width: 150, // Tăng độ rộng của nút
                   child: ElevatedButton(
-                    onPressed: _hasChanges && !_isSaving && !_isUploading ? _handleUpdate : null,
+                    onPressed: (_contentController.text.trim().isNotEmpty ||
+                        _uploadedImageUrls.isNotEmpty ||
+                        (_existingImages.isNotEmpty && _imagesToDelete.isEmpty)
+                    ) &&
+                        !_isSaving &&
+                        !_isUploading
+                        ? _handleUpdate
+                        : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasChanges ? Colors.teal : Colors.grey,
+                      backgroundColor: (_contentController.text.trim().isNotEmpty ||
+                          _uploadedImageUrls.isNotEmpty ||
+                          (_existingImages.isNotEmpty && _imagesToDelete.isEmpty)
+                      ) ? Colors.teal : Colors.grey,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 12,horizontal: 12),
                       shape: RoundedRectangleBorder(

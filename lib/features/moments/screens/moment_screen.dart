@@ -7,6 +7,8 @@ import 'package:lokaloka/features/moments/screens/create_moment_screen.dart';
 import 'package:lokaloka/features/profile/models/post_modal.dart';
 import 'package:lokaloka/features/profile/services/profile_services.dart';
 import 'package:lokaloka/features/profile/screens/comment_screen.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 class MomentsScreen extends StatefulWidget {
   @override
@@ -34,12 +36,14 @@ class _MomentsScreenState extends State<MomentsScreen> {
 
     try {
       _currentUser = await _profileService.getUserProfile();
-      setState(() => _isLoadingUser = false);
       _posts = await _profileService.fetchAllPosts();
     } catch (e) {
       print('Error loading data: $e');
     } finally {
-      setState(() => _isRefreshing = false);
+      setState(() {
+        _isLoadingUser = false;
+        _isRefreshing = false;
+      });
     }
   }
 
@@ -73,15 +77,12 @@ class _MomentsScreenState extends State<MomentsScreen> {
     final List<Like> updatedLikes = List.from(post.likes);
     final int updatedLikeCount = isLiked ? post.likeCount - 1 : post.likeCount + 1;
 
-    // Update the local state to reflect immediate feedback
     setState(() {
       if (isLiked) {
-        // User is unliking the post
         updatedLikes.removeWhere((like) => like.userId == _currentUser!.id);
       } else {
-        // User is liking the post
         updatedLikes.add(Like(
-          id: 0, // Use a temporary ID
+          id: 0,
           postId: post.id,
           userId: _currentUser!.id,
           userEmail: _currentUser!.email,
@@ -89,7 +90,6 @@ class _MomentsScreenState extends State<MomentsScreen> {
         ));
       }
 
-      // Update the post with the new like state without changing the content
       final index = _posts.indexWhere((p) => p.id == post.id);
       if (index != -1) {
         _posts[index] = post.copyWith(
@@ -100,20 +100,15 @@ class _MomentsScreenState extends State<MomentsScreen> {
     });
 
     try {
-      // Call the API to toggle the like
       await _profileService.toggleLike(post.id);
-      // No need to update state again - we've already handled it above in setState
     } catch (e) {
       print('Error toggling like: $e');
-
-      // In case of failure, revert the change
       setState(() {
         final index = _posts.indexWhere((p) => p.id == post.id);
         if (index != -1) {
-          // Revert to the previous like state as needed
           if (isLiked) {
             updatedLikes.add(Like(
-              id: 0, // Use the temporary ID previously assigned
+              id: 0,
               postId: post.id,
               userId: _currentUser!.id,
               userEmail: _currentUser!.email,
@@ -123,7 +118,6 @@ class _MomentsScreenState extends State<MomentsScreen> {
             updatedLikes.removeWhere((like) => like.userId == _currentUser!.id);
           }
 
-          // Update like count back to original
           _posts[index] = post.copyWith(
             likes: updatedLikes,
             likeCount: isLiked ? updatedLikeCount + 1 : updatedLikeCount - 1,
@@ -136,6 +130,7 @@ class _MomentsScreenState extends State<MomentsScreen> {
       );
     }
   }
+
   void _createNewPost() {
     if (_currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,10 +180,6 @@ class _MomentsScreenState extends State<MomentsScreen> {
               currentUserId: _currentUser?.id ?? 0,
               onCommentAdded: _handleCommentAdded,
               onLikeToggled: _handleLikeToggled,
-              onDelete: (postId) async {
-                // Xử lý logic xóa bài viết
-                // Bạn có thể gọi một hàm xóa bài viết từ API ở đây
-              },
             );
           },
         ),
@@ -202,14 +193,12 @@ class PostCard extends StatelessWidget {
   final int currentUserId;
   final Function(Post, Comment) onCommentAdded;
   final Function(Post) onLikeToggled;
-  final Function(int) onDelete; // Hàm xóa bài viết
 
   const PostCard({
     required this.post,
     required this.currentUserId,
     required this.onCommentAdded,
     required this.onLikeToggled,
-    required this.onDelete,
   });
 
   bool _isLikedByCurrentUser() {
@@ -218,8 +207,7 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('MMM d, yyyy • h:mm a')
-        .format(DateTime.parse(post.createdAt));
+    final String formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(DateTime.parse(post.createdAt));
 
     return Card(
       margin: EdgeInsets.only(bottom: 10),
@@ -240,13 +228,11 @@ class PostCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(post.userName, style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12))
+                        Text(formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12)),
                       ],
-                    )
-
+                    ),
                   ],
                 ),
-
               ],
             ),
             SizedBox(height: 4),
@@ -255,7 +241,7 @@ class PostCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(post.content),
               ),
-            if (post.images.isNotEmpty) _buildImageGrid(post.images),
+            if (post.images.isNotEmpty) _buildImageGrid(post.images, context),
             Divider(height: 20),
             _buildPostActions(context),
           ],
@@ -264,68 +250,104 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImageGrid(List<PostImage> images) {
-    if (images.length == 3) {
-      return Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              images[0].content,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    images[1].content,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              SizedBox(width: 5),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    images[2].content,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
+  Widget _buildImageGrid(List<PostImage> images, BuildContext context) {
+    // Giới hạn ảnh hiển thị tối đa là 6
+    List<PostImage> limitedImages = images.take(6).toList();
+    bool hasMoreImages = images.length > 6; // Kiểm tra có ảnh nhiều hơn 6 không
 
-    // Mặc định hiển thị dạng lưới 2x2 nếu có từ 4 ảnh trở lên
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: images.length == 1 ? 1 : 2,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
-      ),
-      itemCount: images.length > 4 ? 4 : images.length,
-      itemBuilder: (context, index) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            images[index].content,
-            fit: BoxFit.cover,
+    if (limitedImages.isEmpty) return SizedBox();
+
+    return Column(
+      children: [
+        GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3, // 3 cột
+            crossAxisSpacing: 5,
+            mainAxisSpacing: 5,
           ),
-        );
-      },
+          itemCount: hasMoreImages ? 6 : limitedImages.length, // Chỉ hiển thị tối đa 6
+          itemBuilder: (context, index) {
+            if (index == 5 && hasMoreImages) {
+              // Nếu là ô thứ 6 thì hiển thị biểu tượng "+" với background là ảnh thứ 6
+              return GestureDetector(
+                onTap: () {
+                  _openImageGallery(images, 5, context); // Mở ảnh thứ 6
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        limitedImages[5].content, // Lấy ảnh thứ 6 làm background
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: Center(child: Icon(Icons.image_not_supported)),
+                          );
+                        },
+                      ),
+                      Container(
+                        color: Colors.black54, // Màu nền tối để làm nổi bật chữ
+                      ),
+                      Center(
+                        child: Text(
+                          '+${images.length - 6}', // Hiển thị số lượng hình còn lại
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            // Hiển thị ảnh bình thường
+            return GestureDetector(
+              onTap: () {
+                _openImageGallery(images, index, context);
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  limitedImages[index].content,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: Center(child: Icon(Icons.image_not_supported)),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _openImageGallery(List<PostImage> images, int initialIndex, BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhotoViewGallery.builder(
+          itemCount: images.length,
+          builder: (context, index) {
+            return PhotoViewGalleryPageOptions(
+              imageProvider: NetworkImage(images[index].content),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 2,
+              heroAttributes: PhotoViewHeroAttributes(tag: images[index].content),
+            );
+          },
+          scrollPhysics: BouncingScrollPhysics(),
+          backgroundDecoration: BoxDecoration(color: Colors.black),
+          pageController: PageController(initialPage: initialIndex),
+        ),
+      ),
     );
   }
 
