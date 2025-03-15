@@ -161,7 +161,7 @@ class _HomeTabState extends State<HomeTab> {
     // Hiển thị thông báo xác nhận xóa
     final confirmed = await showCustomNotice(
         context,
-        "Bạn có chắc chắn muốn xóa bài viết này?",
+        "Are you sure you want to delete this post?",
         "confirm"
     );
 
@@ -456,20 +456,7 @@ class _HomeTabState extends State<HomeTab> {
                     ],
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.share),
-                      onPressed: () {
-                        // Implement share functionality
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                    ),
-                    SizedBox(width: 5),
-                    Text('0'),
-                  ],
-                ),
+
               ],
             ),
             if (post.comments.isNotEmpty) _buildLatestComment(post.comments.last),
